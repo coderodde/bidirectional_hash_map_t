@@ -93,13 +93,13 @@ bidirectional_hash_map_t;
 * secondary_key_equality - the function for comparing secondary keys.       *
 ****************************************************************************/
 void bidirectional_hash_map_t_init(
-                                bidirectional_hash_map_t* map,
-                                size_t initial_capacity,
-                                float load_factor,
-                                size_t (*primary_key_hasher)  (void*),
-                                size_t (*secondary_key_hasher)(void*),
-                                int (*primary_key_equality)   (void*, void*),
-                                int (*secondary_key_equality  (void*, void*)));
+        bidirectional_hash_map_t* map,
+        size_t initial_capacity,
+        float load_factor,
+        size_t (*primary_key_hasher)  (void*),
+        size_t (*secondary_key_hasher)(void*),
+        int (*primary_key_equality)   (void*, void*),
+        int (*secondary_key_equality  (void*, void*)));
 
 /************************************************
 * Releases all the resources of the input map.| *
@@ -112,12 +112,17 @@ void bidirectional_hash_map_t_destroy(bidirectional_hash_map_t* map);
 * Checks that the map is well formed and is ready to receive data.| *
 *-----------------------------------------------------------------+ *
 * map - the map to check.                                           *
+*------------------------------------------------+                  *
+* RETURNS: 1 if the map is in order, 0 otherwise.|                  *
 ********************************************************************/
 int bidirectional_hash_map_t_is_working(bidirectional_hash_map_t* map);
 
 /*****************************************************
 * Returns the number of key pairs in the input map.| *
+*--------------------------------------------------+ *
 * map - the map to query.                            *
+*----------------------------------------------+     *
+* RETURNS: the number of key pairs in this map.|     *
 *****************************************************/
 size_t bidirectional_hash_map_t_size(bidirectional_hash_map_t* map);
 
@@ -126,57 +131,89 @@ size_t bidirectional_hash_map_t_size(bidirectional_hash_map_t* map);
 * capacity).                                                               | *
 *--------------------------------------------------------------------------+ *
 * map - the map to query.                                                    *
+*------------------------------------------+                                 *
+* RETURNS: the capacity of each hash table.|                                 *
 *****************************************************************************/
 size_t bidirectional_hash_map_t_capacity(bidirectional_hash_map_t* map);
 
-/*********************************************************************
-* Associates the primary key to the secondary key in the input map.| *
-*------------------------------------------------------------------+ *
-* map ----------- the map into which to store the pair.              *
-* primary_key --- the primary key.                                   *
-* secondary_key - the secondary key.                                 *
-*********************************************************************/
-void* bidirectional_hash_map_t_put(bidirectional_hash_map_t* map,
-                                   void* primary_key,
-                                   void* secondary_key);
+/******************************************************************************
+* Associates the primary key to the secondary key in the input map.|          *
+*------------------------------------------------------------------+          *
+* map ----------- the map into which to store the pair.                       *
+* primary_key --- the primary key.                                            *
+* secondary_key - the secondary key.                                          *
+*-------------------------------------------------------------------------- + *
+* RETURNS: old secondary key in case the primary key is in the map, NULL if | *
+* the primary key has no mappings yet.                                      | *
+******************************************************************************/
+void* bidirectional_hash_map_t_put_by_primary(bidirectional_hash_map_t* map,
+                                              void* primary_key,
+                                              void* secondary_key);
 
-/******************************************
-* Removes a key pair by its primary key.| *
-*---------------------------------------+ *
-* map --------- the map.                  *
-* primary_key - the primary key.          *
-******************************************/
+/******************************************************************************
+* Associates the secondary key to the primary key in the input map.|          *
+*------------------------------------------------------------------+          *
+* map ----------- the map into which to store the pair.                       *
+* primary_key --- the primary key.                                            *
+* secondary_key - the secondary key.                                          *
+*---------------------------------------------------------------------------+ *
+* RETURNS: old primary key in case the secondary key is in the map, NULL if | *
+* the secondary key has no mappings yet.                                    | *
+******************************************************************************/
+void* bidirectional_hash_map_t_put_by_secondary(bidirectional_hash_map_t* map,
+                                                void* primary_key,
+                                                void* secondary_key);
+
+/******************************************************************************
+* Removes a key pair by its primary key.|                                     *
+*---------------------------------------+                                     *
+* map --------- the map.                                                      *
+* primary_key - the primary key.                                              *
+*---------------------------------------------------------------------------+ *
+* RETURNS: NULL if the primary key is not mapped. The current associated    | *
+* secondary key otherwise.                                                  | *
+******************************************************************************/
 void* bidiretional_hash_map_t_remove_by_primary_key(
-                                                    bidirectional_hash_map_t* map,
-                                                    void* primary_key);
-/*********************************************
-* Removes a key pair by its secondary key.| *
-*-----------------------------------------+ *
-* map --------- the map.                    *
-* secondary_key - the primary key.          *
-********************************************/
-void* bidiretional_hash_map_t_remove_by_secondary_key(
-                                                    bidirectional_hash_map_t* map,
-                                                    void* secondary_key);
+        bidirectional_hash_map_t* map,
+        void* primary_key);
 
-/**************************************************
-* Queries the secondary key via its primary key.| *
-*-----------------------------------------------+ *
-* map --------- the map to query.                 *
-* primary_key - the primary key to use.           *
-**************************************************/
+/****************************************************************************
+* Removes a key pair by its secondary key.|                                 *
+*-----------------------------------------+                                 *
+* map --------- the map.                                                    *
+* secondary_key - the primary key.                                          *
+*-------------------------------------------------------------------------+ *
+* RETURNS: NULL if the seconary key is not mapped. The current associated | *
+* primary key otherwise.                                                  | *
+****************************************************************************/
+void* bidiretional_hash_map_t_remove_by_secondary_key(
+        bidirectional_hash_map_t* map,
+        void* secondary_key);
+
+/******************************************************************************
+* Queries the secondary key via its primary key.|                             *
+*-----------------------------------------------+                             *
+* map --------- the map to query.                                             *
+* primary_key - the primary key to use.                                       *
+*---------------------------------------------------------------------------+ *
+* RETURNS: If the primary key is associated with a secondary key, that very | *
+* secondary key is returned. Otherwise, NULL is returned.                   | *
+******************************************************************************/
 void* bidirectional_hash_map_t_get_by_primary_key(bidirectional_hash_map_t* map,
                                                   void* primary_key);
 
-/**************************************************
-* Queries the primary key via its secondary key.| *
-*-----------------------------------------------+ *
-* map --------- the map to query.                 *
-* secondary_key - the secondary key to use.       *
-**************************************************/
+/******************************************************************************
+* Queries the primary key via its secondary key.|                             *
+*-----------------------------------------------+                             *
+* map --------- the map to query.                                             *
+* secondary_key - the secondary key to use.                                   *
+*---------------------------------------------------------------------------+ *
+* RETURNS: If the secondary key is associated with a primary key, that very | *
+* primary key is returned. Otherwise, NULL is returned.                     | *
+******************************************************************************/
 void* bidirectional_hash_map_t_get_by_secondary_key(
-                                                bidirectional_hash_map_t* map,
-                                                void* secondary_key);
+        bidirectional_hash_map_t* map,
+        void* secondary_key);
 
 
 #endif /* BIDIRECTIONAL_HASH_MAP_H */
