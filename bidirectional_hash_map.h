@@ -30,6 +30,26 @@ typedef struct {
 key_pair_t;
 
 typedef struct {
+    /*************************************************************************
+    * Points to the previous collision chain node or is set to NULL if there *
+    * is no previous collision chain node.                                   *
+    *************************************************************************/
+    struct collision_chain_node_t* prev;
+    
+    /***************************************************************************
+    * Points to the next collision chain node or is set to NULL if there is no *
+    * next collision chain node.                                               *
+    ***************************************************************************/
+    struct collision_chain_node_t* next;
+    
+    /*******************************************
+    * Points to the actual key pair structure. *
+    *******************************************/
+    key_pair_t* key_pair;
+}
+collision_chain_node_t;
+
+typedef struct {
     
     /**********************************
     * Caches the number of key pairs. *
@@ -46,15 +66,15 @@ typedef struct {
     *************************/
     float  load_factor;
     
-    /******************************
-    * The primary key hash table. *
-    ******************************/
-    struct key_pair** primary_key_table;
+    /**************************
+    * The primary hash table. *
+    **************************/
+    struct collision_chain_node_t** primary_key_table;
     
-    /********************************
-    * The secondary key hash table. *
-    ********************************/
-    struct key_pair** secondary_key_table;
+    /****************************
+    * The secondary hash table. *
+    ****************************/
+    struct collision_chain_node_t** secondary_key_table;
     
     /***************************************************************************
     * The function producing the bucket index in the primary key table given a *
