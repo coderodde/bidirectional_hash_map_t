@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-typedef struct {
+typedef struct key_pair_t {
     /*******************
     * The primary key. *
     *******************/
@@ -29,7 +29,7 @@ typedef struct {
 }
 key_pair_t;
 
-typedef struct {
+typedef struct collision_chain_node_t {
     /*************************************************************************
     * Points to the previous collision chain node or is set to NULL if there *
     * is no previous collision chain node.                                   *
@@ -49,7 +49,7 @@ typedef struct {
 }
 collision_chain_node_t;
 
-typedef struct {
+typedef struct bidirectional_hash_map_t {
     
     /**********************************
     * Caches the number of key pairs. *
@@ -111,8 +111,10 @@ bidirectional_hash_map_t;
 * secondary_key_hasher --- the function for producing secondary key hashes. *
 * primary_key_equality --- the function for comparing primary keys.         *
 * secondary_key_equality - the function for comparing secondary keys.       *
+*-----------------------------------------------------------+               *
+* RETURNS: 1 if initialization was successfull, 0 otherwise.|               *
 ****************************************************************************/
-void bidirectional_hash_map_t_init(
+int bidirectional_hash_map_t_init(
         bidirectional_hash_map_t* map,
         size_t initial_capacity,
         float load_factor,
