@@ -42,6 +42,18 @@ typedef struct collision_chain_node_t {
     ***************************************************************************/
     struct collision_chain_node_t* next;
     
+    /**************************************************************************
+    * The previously added node. This field is used for faster iteration over *
+    * the entire hash map.                                                    *
+    **************************************************************************/
+    struct collision_chain_node_t* up;
+    
+    /***************************************************************************
+    * The collision chain node added after this collision chain node. Used for *
+    * faster iteration over the hash map.                                      *
+    ***************************************************************************/
+    struct collision_chain_node_t* down;
+    
     /*******************************************
     * Points to the actual key pair structure. *
     *******************************************/
@@ -65,6 +77,11 @@ typedef struct bidirectional_hash_map_t {
     * Stores the load factor *
     *************************/
     float  load_factor;
+    
+    /***************************************
+    * The mask used for simulating modulo. *
+    ***************************************/ 
+    size_t modulo_mask;
     
     /**************************
     * The primary hash table. *
@@ -98,6 +115,19 @@ typedef struct bidirectional_hash_map_t {
     *******************************************************/
     int    (*secondary_key_equality)(void* secondary_key_1,
                                      void* secondary_key_2);
+    
+    /***************************************************************************
+    * Caches the primary collision chain node of the mapping that was added to *
+    * this hash map. Used for starting the iteration over all mappings. We     *
+    * need this since the hash map may be too sparse after, say, adding a lot  *
+    * of elements and removing most of them.                                   *
+    ***************************************************************************/
+    struct collision_chain_node_t* first_collision_chain_node;
+    
+    /*****************************************
+    * A value that is returned upon failure. *
+    *****************************************/
+    void* error_sentinel;
 }
 bidirectional_hash_map_t;
 
@@ -121,7 +151,8 @@ int bidirectional_hash_map_t_init(
         size_t (*primary_key_hasher)  (void*),
         size_t (*secondary_key_hasher)(void*),
         int (*primary_key_equality)   (void*, void*),
-        int (*secondary_key_equality  (void*, void*)));
+        int (*secondary_key_equality  (void*, void*)),
+        void* error_sentinel);
 
 /************************************************
 * Releases all the resources of the input map.| *
