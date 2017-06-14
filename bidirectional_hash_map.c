@@ -36,8 +36,6 @@ int bidirectional_hash_map_t_init(
                                 int (*secondary_key_equality) (void*, void*),
                                 void* error_sentinel)
 {
-    size_t initial_table_capacity;
-    
     if (!map)
     {
         return 0;
@@ -53,6 +51,7 @@ int bidirectional_hash_map_t_init(
     
     load_factor = maxfloat(load_factor, MINIMUM_LOAD_FACTOR);
     initial_capacity = maxsize_t(initial_capacity, MINIMUM_INITIAL_CAPACITY);
+    initial_capacity = to_power_of_two(initial_capacity);
     
     map->capacity    = initial_capacity;
     map->load_factor = load_factor;
@@ -77,7 +76,7 @@ int bidirectional_hash_map_t_init(
         return 0;
     }
     
-    map->modulo_mask            = to_power_of_two(map->capacity) - 1;
+    map->modulo_mask            = map->capacity - 1;
     map->primary_key_hasher     = primary_key_hasher;
     map->secondary_key_hasher   = secondary_key_hasher;
     map->primary_key_equality   = primary_key_equality;
@@ -427,9 +426,15 @@ void* bidirectional_hash_map_t_put_by_primary(bidirectional_hash_map_t* map,
     
     primary_collision_chain_node->next =
         map->primary_key_table[new_primary_table_index];
+    
+    if (map->primary_key_table[new_primary_table_index])
+    {
+        map->primary_key_table[new_primary_table_index]->prev =
+        primary_collision_chain_node;
+    }
+        
     map->primary_key_table[new_primary_table_index] =
         primary_collision_chain_node;
-    
     
     secondary_collision_chain_node->key_pair = key_pair;
     secondary_collision_chain_node->prev = NULL;
@@ -439,10 +444,22 @@ void* bidirectional_hash_map_t_put_by_primary(bidirectional_hash_map_t* map,
     secondary_collision_chain_node->next =
         map->secondary_key_table[new_secondary_table_index];
     
+    if (map->secondary_key_table[new_secondary_table_index])
+    {
+        map->secondary_key_table[new_secondary_table_index]->prev =
+        secondary_collision_chain_node;
+    }
+    
     map->secondary_key_table[new_secondary_table_index] =
         secondary_collision_chain_node;
     
+    if (map->size == 0)
+    {
+        map->first_collision_chain_node = primary_collision_chain_node;
+    }
     
+    map->size++;
+    map->last_collision_chain_node = primary_collision_chain_node;
     
     return NULL;
 }
