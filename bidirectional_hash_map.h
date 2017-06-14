@@ -23,9 +23,6 @@ typedef struct key_pair_t {
     * The hash of the secondary key *
     ********************************/
     size_t secondary_key_hash;
-    
-    struct key_pair_t* prev;
-    struct key_pair_t* next;
 }
 key_pair_t;
 
@@ -123,6 +120,12 @@ typedef struct bidirectional_hash_map_t {
     * of elements and removing most of them.                                   *
     ***************************************************************************/
     struct collision_chain_node_t* first_collision_chain_node;
+    
+    /***************************************************************************
+    * Caches the most recently added mapping to this hash map. We need this in *
+    * order to link new mappings to the mapping list.                          *
+    ***************************************************************************/
+    struct collision_chain_node_t* last_collision_chain_node;
     
     /*****************************************
     * A value that is returned upon failure. *
