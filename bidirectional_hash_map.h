@@ -151,7 +151,7 @@ int bidirectional_hash_map_t_init(
         size_t (*primary_key_hasher)  (void*),
         size_t (*secondary_key_hasher)(void*),
         int (*primary_key_equality)   (void*, void*),
-        int (*secondary_key_equality  (void*, void*)),
+        int (*secondary_key_equality)  (void*, void*),
         void* error_sentinel);
 
 /************************************************

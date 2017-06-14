@@ -7,9 +7,21 @@
 //
 
 #include <stdio.h>
+#include <stdlib.h>
 
-int main(int argc, const char * argv[]) {
-    // insert code here...
-    printf("Hello, World!\n");
-    return 0;
+int cmpf(const void* a, const void* b)
+{
+    return (*(int*)b - *(int*)a);
+}
+
+void get_change(float money, int* coins, size_t coins_len)
+{
+    qsort(coins, coins_len, sizeof(int), cmpf);
+    printf("%d", coins[0]);
+}
+
+int main()
+{
+    int coins[] = {1, 17};
+    get_change(1.00, coins, 2);
 }

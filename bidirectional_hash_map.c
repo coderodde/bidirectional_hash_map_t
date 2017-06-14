@@ -1,4 +1,5 @@
 #include "bidirectional_hash_map.h"
+#include <stdlib.h>
 
 static float maxfloat(float a, float b)
 {
@@ -256,7 +257,7 @@ static int expand_hash_map(bidirectional_hash_map_t* map)
                                      next_primary_hash_table,
                                      next_secondary_hash_table))
         {
-            purge_tables(next_primary_hash_table, next_secondary_hash_table);
+            //purge_tables(next_primary_hash_table, next_secondary_hash_table);
             return 0;
         }
         
@@ -304,10 +305,60 @@ void* bidiretional_hash_map_t_remove_by_secondary_key(
                                                       void* secondary_key);
 
 void* bidirectional_hash_map_t_get_by_primary_key(bidirectional_hash_map_t* map,
-                                                  void* primary_key);
+                                                  void* primary_key)
+{
+    size_t primary_key_hash = map->primary_key_hasher(primary_key);
+    size_t collision_chain_bucket_index = primary_key_hash & map->modulo_mask;
+    collision_chain_node_t* node =
+        map->primary_key_table[collision_chain_bucket_index];
+    
+    if (!node)
+    {
+        return NULL;
+    }
+    
+    for (; node; node = node->next)
+    {
+        if (node->key_pair->primary_key_hash == primary_key_hash)
+        {
+            if (map->primary_key_equality(node->key_pair->primary_key,
+                                          primary_key))
+            {
+                return node->key_pair->secondary_key;
+            }
+        }
+    }
+    
+    return NULL;
+}
 
 void* bidirectional_hash_map_t_get_by_secondary_key(
                                                     bidirectional_hash_map_t* map,
-                                                    void* secondary_key);
+                                                    void* secondary_key)
+{
+    size_t secondary_key_hash = map->secondary_key_hasher(secondary_key);
+    size_t collision_chain_bucket_index = secondary_key_hash & map->modulo_mask;
+    collision_chain_node_t* node =
+        map->secondary_key_table[collision_chain_bucket_index];
+    
+    if (!node)
+    {
+        return NULL;
+    }
+    
+    for (; node; node = node->next)
+    {
+        if (node->key_pair->secondary_key_hash == secondary_key_hash)
+        {
+            if (map->secondary_key_equality(node->key_pair->secondary_key,
+                                            secondary_key))
+            {
+                return node->key_pair->primary_key;
+            }
+        }
+    }
+    
+    return NULL;
+}
 
 
