@@ -58,7 +58,7 @@ int bidirectional_hash_map_t_init(
     map->size        = 0;
     
     map->primary_key_table = calloc(initial_capacity,
-                                    sizeof(collision_chain_node_t*));
+                                    sizeof(primary_collision_chain_node_t*));
     
     if (!map->primary_key_table)
     {
@@ -66,8 +66,8 @@ int bidirectional_hash_map_t_init(
         return 0;
     }
     
-    map->secondary_key_table = calloc(initial_capacity,
-                                      sizeof(collision_chain_node_t*));
+    map->secondary_key_table =
+        calloc(initial_capacity, sizeof(secondary_collision_chain_node_t*));
     
     if (!map->secondary_key_table)
     {
@@ -87,9 +87,9 @@ int bidirectional_hash_map_t_init(
 }
 
 static void remove_mapping(bidirectional_hash_map_t* map,
-                           collision_chain_node_t* node)
+                           primary_collision_chain_node_t* node)
 {
-    collision_chain_node_t* opposite_collision_chain_node;
+    secondary_collision_chain_node_t* opposite_collision_chain_node;
     size_t secondary_key_hash = node->key_pair->secondary_key_hash;
     size_t secondary_key_bucket_index = secondary_key_hash & map->modulo_mask;
     size_t bucket_index;
@@ -153,8 +153,8 @@ static void remove_mapping(bidirectional_hash_map_t* map,
 
 void bidirectional_hash_map_t_destroy(bidirectional_hash_map_t* map)
 {
-    collision_chain_node_t* collision_chain_node;
-    collision_chain_node_t* collision_chain_node_next;
+    primary_collision_chain_node_t* collision_chain_node;
+    primary_collision_chain_node_t* collision_chain_node_next;
     
     if (!map)
     {
@@ -204,15 +204,15 @@ size_t bidirectional_hash_map_t_capacity(bidirectional_hash_map_t* map)
 }
 
 static void relink_to_new_tables(
-                            bidirectional_hash_map_t* map,
-                            collision_chain_node_t* node,
-                            collision_chain_node_t** next_primary_hash_table,
-                            collision_chain_node_t** next_secondary_hash_table)
+                bidirectional_hash_map_t* map,
+                primary_collision_chain_node_t* node,
+                primary_collision_chain_node_t** next_primary_hash_table,
+                secondary_collision_chain_node_t** next_secondary_hash_table)
 {
     size_t bucket_index;
     size_t next_capacity;
     size_t next_modulo_mask;
-    collision_chain_node_t* opposite_node;
+    secondary_collision_chain_node_t* opposite_node;
     
     /* 'node' is a node of a primary table collision chain. */
     /* Unlink the node from its collision chain. */
@@ -286,23 +286,23 @@ static int expand_hash_map(bidirectional_hash_map_t* map)
 {
     size_t next_capacity;
     size_t next_modulo_mask;
-    collision_chain_node_t** next_primary_hash_table;
-    collision_chain_node_t** next_secondary_hash_table;
-    collision_chain_node_t* node;
-    collision_chain_node_t* next_node;
+    primary_collision_chain_node_t** next_primary_hash_table;
+    secondary_collision_chain_node_t** next_secondary_hash_table;
+    primary_collision_chain_node_t* node;
+    primary_collision_chain_node_t* next_node;
     
     next_capacity = map->capacity >> 1;
     
     next_primary_hash_table = calloc(next_capacity,
-                                     sizeof(collision_chain_node_t*));
+                                     sizeof(primary_collision_chain_node_t*));
     
     if (!next_primary_hash_table)
     {
         return 0;
     }
     
-    next_secondary_hash_table = calloc(next_capacity,
-                                       sizeof(collision_chain_node_t*));
+    next_secondary_hash_table =
+        calloc(next_capacity, sizeof(secondary_collision_chain_node_t*));
     
     if (!next_secondary_hash_table)
     {
@@ -335,9 +335,9 @@ static int expand_hash_map(bidirectional_hash_map_t* map)
 }
 
 static void update_primary_key(
-                    bidirectional_hash_map_t* map,
-                    collision_chain_node_t* secondary_collision_chain_node,
-                    void* new_primary_key)
+            bidirectional_hash_map_t* map,
+            secondary_collision_chain_node_t* secondary_collision_chain_node,
+            void* new_primary_key)
 {
     size_t primary_key_hash =
     secondary_collision_chain_node->key_pair->primary_key_hash;
@@ -346,7 +346,7 @@ static void update_primary_key(
     size_t new_primary_key_bucket_index;
     size_t new_primary_key_hash;
     
-    collision_chain_node_t* primary_collision_chain_node =
+    primary_collision_chain_node_t* primary_collision_chain_node =
     map->primary_key_table[primary_key_bucket_index];
     
     /* Find the primary collision chain node: */
@@ -397,9 +397,9 @@ static void update_primary_key(
 }
 
 static void update_secondary_key(
-                        bidirectional_hash_map_t* map,
-                        collision_chain_node_t* primary_collision_chain_node,
-                        void* new_secondary_key)
+                bidirectional_hash_map_t* map,
+                primary_collision_chain_node_t* primary_collision_chain_node,
+                void* new_secondary_key)
 {
     size_t secondary_key_hash =
     primary_collision_chain_node->key_pair->secondary_key_hash;
@@ -408,7 +408,7 @@ static void update_secondary_key(
     size_t new_secondary_key_bucket_index;
     size_t new_secondary_key_hash;
     
-    collision_chain_node_t* secondary_collision_chain_node =
+    secondary_collision_chain_node_t* secondary_collision_chain_node =
     map->secondary_key_table[secondary_key_bucket_index];
     
     /* Find the secondary collision chain node: */
@@ -463,8 +463,8 @@ static int add_new_mapping(bidirectional_hash_map_t* map,
                            void* secondary_key)
 {
     key_pair_t* key_pair;
-    collision_chain_node_t* primary_collision_chain_node;
-    collision_chain_node_t* secondary_collision_chain_node;
+    primary_collision_chain_node_t* primary_collision_chain_node;
+    secondary_collision_chain_node_t* secondary_collision_chain_node;
     size_t primary_table_bucket_index;
     size_t secondary_table_bucket_index;
     
@@ -556,7 +556,7 @@ void* bidirectional_hash_map_t_put_by_primary(bidirectional_hash_map_t* map,
 {
     size_t primary_key_hash;
     size_t primary_key_chain_index;
-    collision_chain_node_t* collision_chain_node;
+    primary_collision_chain_node_t* collision_chain_node;
     void* return_value;
     
     primary_key_hash = map->primary_key_hasher(primary_key);
@@ -597,7 +597,7 @@ void* bidirectional_hash_map_t_put_by_secondary(bidirectional_hash_map_t* map,
 {
     size_t secondary_key_hash;
     size_t secondary_key_chain_index;
-    collision_chain_node_t* collision_chain_node;
+    secondary_collision_chain_node_t* collision_chain_node;
     void* return_value;
     
     secondary_key_hash = map->secondary_key_hasher(secondary_key);
@@ -645,7 +645,7 @@ void* bidirectional_hash_map_t_get_by_primary_key(bidirectional_hash_map_t* map,
 {
     size_t primary_key_hash = map->primary_key_hasher(primary_key);
     size_t collision_chain_bucket_index = primary_key_hash & map->modulo_mask;
-    collision_chain_node_t* node =
+    primary_collision_chain_node_t* node =
         map->primary_key_table[collision_chain_bucket_index];
     
     for (; node; node = node->next)
@@ -669,7 +669,7 @@ void* bidirectional_hash_map_t_get_by_secondary_key(
 {
     size_t secondary_key_hash = map->secondary_key_hasher(secondary_key);
     size_t collision_chain_bucket_index = secondary_key_hash & map->modulo_mask;
-    collision_chain_node_t* node =
+    secondary_collision_chain_node_t* node =
         map->secondary_key_table[collision_chain_bucket_index];
     
     for (; node; node = node->next)

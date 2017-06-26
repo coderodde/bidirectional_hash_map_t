@@ -33,32 +33,32 @@ key_pair_t;
 typedef struct primary_collision_chain_node_t {
     
     /*************************************************************************
-     * Points to the previous collision chain node or is set to NULL if there *
-     * is no previous collision chain node.                                   *
-     *************************************************************************/
+    * Points to the previous collision chain node or is set to NULL if there *
+    * is no previous collision chain node.                                   *
+    *************************************************************************/
     struct primary_collision_chain_node_t* prev;
     
     /***************************************************************************
-     * Points to the next collision chain node or is set to NULL if there is no *
-     * next collision chain node.                                               *
-     ***************************************************************************/
+    * Points to the next collision chain node or is set to NULL if there is no *
+    * next collision chain node.                                               *
+    ***************************************************************************/
     struct primary_collision_chain_node_t* next;
     
     /**************************************************************************
-     * The previously added node. This field is used for faster iteration over *
-     * the entire hash map.                                                    *
-     **************************************************************************/
+    * The previously added node. This field is used for faster iteration over *
+    * the entire hash map.                                                    *
+    **************************************************************************/
     struct primary_collision_chain_node_t* up;
     
     /***************************************************************************
-     * The collision chain node added after this collision chain node. Used for *
-     * faster iteration over the hash map.                                      *
-     ***************************************************************************/
+    * The collision chain node added after this collision chain node. Used for *
+    * faster iteration over the hash map.                                      *
+    ***************************************************************************/
     struct primary_collision_chain_node_t* down;
     
     /*******************************************
-     * Points to the actual key pair structure. *
-     *******************************************/
+    * Points to the actual key pair structure. *
+    *******************************************/
     key_pair_t* key_pair;
 }
 primary_collision_chain_node_t;
@@ -69,20 +69,20 @@ primary_collision_chain_node_t;
 typedef struct secondary_collision_chain_node_t {
     
     /*************************************************************************
-     * Points to the previous collision chain node or is set to NULL if there *
-     * is no previous collision chain node.                                   *
-     *************************************************************************/
-    struct primary_collision_chain_node_t* prev;
+    * Points to the previous collision chain node or is set to NULL if there *
+    * is no previous collision chain node.                                   *
+    *************************************************************************/
+    struct secondary_collision_chain_node_t* prev;
     
     /***************************************************************************
-     * Points to the next collision chain node or is set to NULL if there is no *
-     * next collision chain node.                                               *
-     ***************************************************************************/
-    struct primary_collision_chain_node_t* next;
+    * Points to the next collision chain node or is set to NULL if there is no *
+    * next collision chain node.                                               *
+    ***************************************************************************/
+    struct secondary_collision_chain_node_t* next;
     
     /*******************************************
-     * Points to the actual key pair structure. *
-     *******************************************/
+    * Points to the actual key pair structure. *
+    *******************************************/
     key_pair_t* key_pair;
 }
 secondary_collision_chain_node_t;
