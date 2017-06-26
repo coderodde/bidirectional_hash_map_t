@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 typedef struct key_pair_t {
+    
     /*******************
     * The primary key. *
     *******************/
@@ -26,37 +27,65 @@ typedef struct key_pair_t {
 }
 key_pair_t;
 
-typedef struct collision_chain_node_t {
+/********************************************************
+ * The collision chain node type for primary key chains. *
+ ********************************************************/
+typedef struct primary_collision_chain_node_t {
+    
     /*************************************************************************
-    * Points to the previous collision chain node or is set to NULL if there *
-    * is no previous collision chain node.                                   *
-    *************************************************************************/
-    struct collision_chain_node_t* prev;
+     * Points to the previous collision chain node or is set to NULL if there *
+     * is no previous collision chain node.                                   *
+     *************************************************************************/
+    struct primary_collision_chain_node_t* prev;
     
     /***************************************************************************
-    * Points to the next collision chain node or is set to NULL if there is no *
-    * next collision chain node.                                               *
-    ***************************************************************************/
-    struct collision_chain_node_t* next;
+     * Points to the next collision chain node or is set to NULL if there is no *
+     * next collision chain node.                                               *
+     ***************************************************************************/
+    struct primary_collision_chain_node_t* next;
     
     /**************************************************************************
-    * The previously added node. This field is used for faster iteration over *
-    * the entire hash map.                                                    *
-    **************************************************************************/
-    struct collision_chain_node_t* up;
+     * The previously added node. This field is used for faster iteration over *
+     * the entire hash map.                                                    *
+     **************************************************************************/
+    struct primary_collision_chain_node_t* up;
     
     /***************************************************************************
-    * The collision chain node added after this collision chain node. Used for *
-    * faster iteration over the hash map.                                      *
-    ***************************************************************************/
-    struct collision_chain_node_t* down;
+     * The collision chain node added after this collision chain node. Used for *
+     * faster iteration over the hash map.                                      *
+     ***************************************************************************/
+    struct primary_collision_chain_node_t* down;
     
     /*******************************************
-    * Points to the actual key pair structure. *
-    *******************************************/
+     * Points to the actual key pair structure. *
+     *******************************************/
     key_pair_t* key_pair;
 }
-collision_chain_node_t;
+primary_collision_chain_node_t;
+
+/**********************************************************
+* The collision chain node type for secondary key chains. *
+**********************************************************/
+typedef struct secondary_collision_chain_node_t {
+    
+    /*************************************************************************
+     * Points to the previous collision chain node or is set to NULL if there *
+     * is no previous collision chain node.                                   *
+     *************************************************************************/
+    struct primary_collision_chain_node_t* prev;
+    
+    /***************************************************************************
+     * Points to the next collision chain node or is set to NULL if there is no *
+     * next collision chain node.                                               *
+     ***************************************************************************/
+    struct primary_collision_chain_node_t* next;
+    
+    /*******************************************
+     * Points to the actual key pair structure. *
+     *******************************************/
+    key_pair_t* key_pair;
+}
+secondary_collision_chain_node_t;
 
 typedef struct bidirectional_hash_map_t {
     
@@ -83,12 +112,12 @@ typedef struct bidirectional_hash_map_t {
     /**************************
     * The primary hash table. *
     **************************/
-    struct collision_chain_node_t** primary_key_table;
+    struct primary_collision_chain_node_t** primary_key_table;
     
     /****************************
     * The secondary hash table. *
     ****************************/
-    struct collision_chain_node_t** secondary_key_table;
+    struct secondary_collision_chain_node_t** secondary_key_table;
     
     /***************************************************************************
     * The function producing the bucket index in the primary key table given a *
@@ -119,13 +148,13 @@ typedef struct bidirectional_hash_map_t {
     * need this since the hash map may be too sparse after, say, adding a lot  *
     * of elements and removing most of them.                                   *
     ***************************************************************************/
-    struct collision_chain_node_t* first_collision_chain_node;
+    struct primary_collision_chain_node_t* first_collision_chain_node;
     
     /***************************************************************************
     * Caches the most recently added mapping to this hash map. We need this in *
     * order to link new mappings to the mapping list.                          *
     ***************************************************************************/
-    struct collision_chain_node_t* last_collision_chain_node;
+    struct primary_collision_chain_node_t* last_collision_chain_node;
     
     /*****************************************
     * A value that is returned upon failure. *
@@ -270,6 +299,31 @@ void* bidirectional_hash_map_t_get_by_primary_key(bidirectional_hash_map_t* map,
 void* bidirectional_hash_map_t_get_by_secondary_key(
         bidirectional_hash_map_t* map,
         void* secondary_key);
+
+/**************************************************************************
+* Queries whether the map contains 'primary_key' as a primary key.|       *
+*-----------------------------------------------------------------+       *
+* map --- the map to query.                                               *
+* primary_key - the primary key to query.                                 *
+*-----------------------------------------------------------------------+ *
+* RETURNS: If the primary key is in the map, returns 1. Otherwise, 0 is | *
+* returned.                                                             | *
+**************************************************************************/
+int bidirectional_hash_map_t_contains_primary_key(bidirectional_hash_map_t* map,
+                                                  void* primary_key);
+
+/****************************************************************************
+* Queries whether the map contains 'secondary_key' as a secondary key.|     *
+*---------------------------------------------------------------------+     *
+* map ----------- the map to query.                                         *
+* secondary_key - the primary key to query.                                 *
+*-------------------------------------------------------------------------+ *
+* RETURNS: If the secondary key is in the map, returns 1. Otherwise, 0 is | *
+* returned.                                                               | *
+****************************************************************************/
+int bidirectional_hash_map_t_contains_secondary_key(
+                                                bidirectional_hash_map_t* map,
+                                                void* secondary_key);
 
 
 #endif /* BIDIRECTIONAL_HASH_MAP_H */
