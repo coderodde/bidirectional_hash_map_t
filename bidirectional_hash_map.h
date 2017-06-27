@@ -277,7 +277,7 @@ void* bidirectional_hash_map_t_put_by_secondary(bidirectional_hash_map_t* map,
 * RETURNS: NULL if the primary key is not mapped. The current associated    | *
 * secondary key otherwise.                                                  | *
 ******************************************************************************/
-void* bidiretional_hash_map_t_remove_by_primary_key(
+void* bidirectional_hash_map_t_remove_by_primary_key(
         bidirectional_hash_map_t* map,
         void* primary_key);
 
@@ -290,7 +290,7 @@ void* bidiretional_hash_map_t_remove_by_primary_key(
 * RETURNS: NULL if the seconary key is not mapped. The current associated | *
 * primary key otherwise.                                                  | *
 ****************************************************************************/
-void* bidiretional_hash_map_t_remove_by_secondary_key(
+void* bidirectional_hash_map_t_remove_by_secondary_key(
         bidirectional_hash_map_t* map,
         void* secondary_key);
 
@@ -376,7 +376,7 @@ int bidirectional_hash_map_iterator_t_has_next(
 *                     key.                                                     *
 *-----------------------------------------------------+                        *
 * RETURNS: 1 if iteration was successful, 0 otherwise.|                        *
- ******************************************************************************/
+*******************************************************************************/
 int bidirectional_hash_map_iterator_t_next(
                                     bidirectional_hash_map_iterator_t* iterator,
                                     void** primary_key_ptr,

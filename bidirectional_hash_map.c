@@ -20,7 +20,7 @@ static size_t to_power_of_two(size_t num)
     
     while (ret < num)
     {
-        ret >>= 1;
+        ret <<= 1;
     }
     
     return  ret;
@@ -34,8 +34,8 @@ static const size_t MINIMUM_INITIAL_CAPACITY = 8;
 * chain.                                                                 *
 *************************************************************************/
 static void unlink_primary_collision_chain_node(
-                                                bidirectional_hash_map_t* map,
-                                                primary_collision_chain_node_t* primary_collision_chain_node)
+                bidirectional_hash_map_t* map,
+                primary_collision_chain_node_t* primary_collision_chain_node)
 {
     size_t primary_node_collision_chain_bucket_index;
     
@@ -66,8 +66,8 @@ static void unlink_primary_collision_chain_node(
 * chain.                                                                    *
 ****************************************************************************/
 static void unlink_secondary_collision_chain_node(
-                                                  bidirectional_hash_map_t* map,
-                                                  secondary_collision_chain_node_t* secondary_collision_chain_node)
+            bidirectional_hash_map_t* map,
+            secondary_collision_chain_node_t* secondary_collision_chain_node)
 {
     size_t secondary_node_collision_chain_bucket_index;
     
@@ -84,7 +84,7 @@ static void unlink_secondary_collision_chain_node(
         
         map->secondary_key_table[secondary_node_collision_chain_bucket_index] =
         map->secondary_key_table[secondary_node_collision_chain_bucket_index]
-        ->next;
+           ->next;
     }
     
     if (secondary_collision_chain_node->next)
@@ -95,13 +95,13 @@ static void unlink_secondary_collision_chain_node(
 }
 
 /*************************************************************
- * Finds a secondary collision chain node that corresponds to *
- * 'primary_collision_chain_node'.                            *
- *************************************************************/
+* Finds a secondary collision chain node that corresponds to *
+* 'primary_collision_chain_node'.                            *
+*************************************************************/
 static secondary_collision_chain_node_t*
 find_secondary_collision_chain_node_via_primary_collision_chain_node(
-                                                                     bidirectional_hash_map_t* map,
-                                                                     primary_collision_chain_node_t* primary_collision_chain_node)
+                bidirectional_hash_map_t* map,
+                primary_collision_chain_node_t* primary_collision_chain_node)
 {
     size_t secondary_collision_chain_node_bucket_index =
     primary_collision_chain_node->key_pair
@@ -125,13 +125,13 @@ find_secondary_collision_chain_node_via_primary_collision_chain_node(
 }
 
 /***********************************************************
- * Finds a primary collision chain node that corresponds to *
- * 'secondary_collision_chain_node'.                        *
- ***********************************************************/
+* Finds a primary collision chain node that corresponds to *
+* 'secondary_collision_chain_node'.                        *
+***********************************************************/
 static primary_collision_chain_node_t*
 find_primary_collision_chain_node_via_secondary_collision_chain_node(
-                                                                     bidirectional_hash_map_t* map,
-                                                                     secondary_collision_chain_node_t* secondary_collision_chain_node)
+            bidirectional_hash_map_t* map,
+            secondary_collision_chain_node_t* secondary_collision_chain_node)
 {
     size_t primary_collision_chain_node_bucket_index =
     secondary_collision_chain_node->key_pair
@@ -159,13 +159,13 @@ find_primary_collision_chain_node_via_secondary_collision_chain_node(
 * from the bidirectional hash map.                                          *
 ****************************************************************************/
 static void remove_mapping(
-                           bidirectional_hash_map_t* map,
-                           primary_collision_chain_node_t* primary_collision_chain_node)
+                bidirectional_hash_map_t* map,
+                primary_collision_chain_node_t* primary_collision_chain_node)
 {
     secondary_collision_chain_node_t* secondary_collision_chain_node =
     find_secondary_collision_chain_node_via_primary_collision_chain_node(
-                                                                         map,
-                                                                         primary_collision_chain_node);
+                                                map,
+                                                primary_collision_chain_node);
     
     free(primary_collision_chain_node->key_pair);
     
@@ -173,7 +173,7 @@ static void remove_mapping(
     * Unlink and purge the primary collision chain node: *
     *****************************************************/
     unlink_primary_collision_chain_node(map, primary_collision_chain_node);
-    free(primary_collision_chain_node->key_pair);
+    free(primary_collision_chain_node);
     
     /*******************************************************
     * Unlink and purge the secondary collision chain node: *
@@ -183,12 +183,12 @@ static void remove_mapping(
 }
 
 /*************************************************************************
- * This functions returns a primary collision chain node corresponding to *
- * 'primary_key'.                                                         *
- *************************************************************************/
+* This functions returns a primary collision chain node corresponding to *
+* 'primary_key'.                                                         *
+*************************************************************************/
 static primary_collision_chain_node_t* find_primary_collision_chain_node(
-                                                                         bidirectional_hash_map_t* map,
-                                                                         void* primary_key)
+                                                bidirectional_hash_map_t* map,
+                                                void* primary_key)
 {
     size_t primary_key_hash = map->primary_key_hasher(primary_key);
     
@@ -206,8 +206,8 @@ static primary_collision_chain_node_t* find_primary_collision_chain_node(
             primary_key_hash)
         {
             if (map->primary_key_equality(
-                                          primary_key,
-                                          primary_collision_chain_node->key_pair->primary_key))
+                        primary_key,
+                        primary_collision_chain_node->key_pair->primary_key))
             {
                 break;
             }
@@ -218,12 +218,12 @@ static primary_collision_chain_node_t* find_primary_collision_chain_node(
 }
 
 /***************************************************************************
- * This functions returns a secondary collision chain node corresponding to *
- * 'secondary_key'.                                                         *
- ***************************************************************************/
+* This functions returns a secondary collision chain node corresponding to *
+* 'secondary_key'.                                                         *
+***************************************************************************/
 static secondary_collision_chain_node_t* find_secondary_collision_chain_node(
-                                                                             bidirectional_hash_map_t* map,
-                                                                             void* secondary_key)
+                                                bidirectional_hash_map_t* map,
+                                                void* secondary_key)
 {
     size_t secondary_key_hash = map->secondary_key_hasher(secondary_key);
     
@@ -240,9 +240,9 @@ static secondary_collision_chain_node_t* find_secondary_collision_chain_node(
         if (secondary_collision_chain_node->key_pair->secondary_key_hash ==
             secondary_key_hash)
         {
-            if (map->primary_key_equality(
-                                          secondary_key,
-                                          secondary_collision_chain_node->key_pair->secondary_key))
+            if (map->secondary_key_equality(
+                    secondary_key,
+                    secondary_collision_chain_node->key_pair->secondary_key))
             {
                 break;
             }
@@ -387,7 +387,8 @@ static void relink_to_new_tables(
                 secondary_collision_chain_node_t** next_secondary_hash_table)
 {
     size_t primary_collision_chain_bucket_index;
-    size_t secondary_collision_chain_bucket_index;    size_t next_capacity;
+    size_t secondary_collision_chain_bucket_index;
+    size_t next_capacity;
     size_t next_modulo_mask;
     secondary_collision_chain_node_t* secondary_collision_chain_node;
     
@@ -411,7 +412,7 @@ static void relink_to_new_tables(
     * Relink both 'primary_collision_chain_node' and       *
     * 'secondary_collision_chain_node' to new hash tables. *
     *******************************************************/
-    next_capacity = map->capacity >> 1;
+    next_capacity = map->capacity << 1;
     next_modulo_mask = next_capacity - 1;
     
     /*************************************************************
@@ -423,6 +424,13 @@ static void relink_to_new_tables(
     primary_collision_chain_node->prev = NULL;
     primary_collision_chain_node->next =
     next_primary_hash_table[primary_collision_chain_bucket_index];
+    
+    if (next_primary_hash_table[primary_collision_chain_bucket_index])
+    {
+        next_primary_hash_table[primary_collision_chain_bucket_index]->prev =
+        primary_collision_chain_node;
+    }
+    
     next_primary_hash_table[primary_collision_chain_bucket_index] =
     primary_collision_chain_node;
     
@@ -436,6 +444,13 @@ static void relink_to_new_tables(
     secondary_collision_chain_node->prev = NULL;
     secondary_collision_chain_node->next =
     next_secondary_hash_table[secondary_collision_chain_bucket_index];
+    
+    if (next_secondary_hash_table[secondary_collision_chain_bucket_index])
+    {
+        next_secondary_hash_table[secondary_collision_chain_bucket_index]->prev
+        = secondary_collision_chain_node;
+    }
+    
     next_secondary_hash_table[secondary_collision_chain_bucket_index] =
     secondary_collision_chain_node;
 }
@@ -500,11 +515,12 @@ static int expand_hash_map(bidirectional_hash_map_t* map)
 /************************************************************************
 * This function is responsible for updating a primary key of a mapping. *
 ************************************************************************/
-static void update_primary_key(
+static void* update_primary_key(
             bidirectional_hash_map_t* map,
             secondary_collision_chain_node_t* secondary_collision_chain_node,
             void* new_primary_key)
 {
+    void* old_primary_key;
     size_t new_primary_key_hash;
     size_t new_primary_key_collision_chain_bucket_index;
     
@@ -515,6 +531,8 @@ static void update_primary_key(
     find_primary_collision_chain_node_via_secondary_collision_chain_node(
                                                 map,
                                                 secondary_collision_chain_node);
+    
+    old_primary_key = primary_collision_chain_node->key_pair->primary_key;
     
     /**************************************************************************
     * Unlink 'primary_collision_chain_node' from its current collision chain: *
@@ -537,15 +555,24 @@ static void update_primary_key(
     primary_collision_chain_node->next =
     map->primary_key_table[new_primary_key_collision_chain_bucket_index];
     
+    if (map->primary_key_table[new_primary_key_collision_chain_bucket_index])
+    {
+        map->primary_key_table[new_primary_key_collision_chain_bucket_index]
+           ->prev = primary_collision_chain_node;
+    }
+    
     map->primary_key_table[new_primary_key_collision_chain_bucket_index] =
     primary_collision_chain_node;
+    
+    return old_primary_key;
 }
 
-static void update_secondary_key(
+static void* update_secondary_key(
                 bidirectional_hash_map_t* map,
                 primary_collision_chain_node_t* primary_collision_chain_node,
                 void* new_secondary_key)
 {
+    void* old_secondary_key;
     size_t new_secondary_key_hash;
     size_t new_secondary_key_collision_chain_bucket_index;
     
@@ -556,6 +583,8 @@ static void update_secondary_key(
         find_secondary_collision_chain_node_via_primary_collision_chain_node(
                                                 map,
                                                 primary_collision_chain_node);
+    
+    old_secondary_key = secondary_collision_chain_node->key_pair->secondary_key;
     
     /*********************************************************************
     * Unlink 'secondary_collision_chain_node' from its current collision *
@@ -579,8 +608,17 @@ static void update_secondary_key(
     secondary_collision_chain_node->next =
     map->secondary_key_table[new_secondary_key_collision_chain_bucket_index];
     
+    if (map->
+        secondary_key_table[new_secondary_key_collision_chain_bucket_index])
+    {
+        map->secondary_key_table[new_secondary_key_collision_chain_bucket_index]
+           ->prev = secondary_collision_chain_node;
+    }
+    
     map->secondary_key_table[new_secondary_key_collision_chain_bucket_index] =
     secondary_collision_chain_node;
+    
+    return old_secondary_key;
 }
 
 /*******************************************************************************
@@ -597,6 +635,11 @@ static int add_new_mapping(bidirectional_hash_map_t* map,
     secondary_collision_chain_node_t* secondary_collision_chain_node;
     size_t primary_key_collision_chain_bucket_index;
     size_t secondary_key_collision_chain_bucket_index;
+    
+    if (map->size > map->capacity * map->load_factor)
+    {
+        expand_hash_map(map);
+    }
     
     key_pair = malloc(sizeof(*key_pair));
     
@@ -649,7 +692,9 @@ static int add_new_mapping(bidirectional_hash_map_t* map,
     map->primary_key_table[primary_key_collision_chain_bucket_index] =
     primary_collision_chain_node;
     
-    /* Link 'secondary_collision_chain_node' to its table: */
+    /******************************************************
+    * Link 'secondary_collision_chain_node' to its table: *
+    ******************************************************/
     secondary_collision_chain_node->key_pair = key_pair;
     secondary_collision_chain_node->prev = NULL;
     secondary_key_collision_chain_bucket_index =
@@ -676,6 +721,7 @@ static int add_new_mapping(bidirectional_hash_map_t* map,
     }
     else
     {
+        primary_collision_chain_node->down = NULL;
         primary_collision_chain_node->up = map->last_collision_chain_node;
         map->last_collision_chain_node = primary_collision_chain_node;
     }
@@ -713,15 +759,6 @@ static void unlink_primary_collision_chain_node_from_iteraton_list(
     }
 }
 
-/*******************************************************************************
-* This function puts a mapping ('primary_key', 'secondary_key') via            *
-* 'primary_key'. If this map already maps 'primary_key', its corresponding     *
-* 'secondary_key' is updated and the old value of the secondary key is         *
-* returned. If there is no mapping for 'primary_key', it is associated with    *
-* 'secondary_key' and NULL is returned. Finally, if memory allocation for the  *
-* operation fails (when putting a new mapping, that is), the error sentinel    *
-* is returned.                                                                 *
-*******************************************************************************/
 void* bidirectional_hash_map_t_put_by_primary(bidirectional_hash_map_t* map,
                                               void* primary_key,
                                               void* secondary_key)
@@ -736,36 +773,18 @@ void* bidirectional_hash_map_t_put_by_primary(bidirectional_hash_map_t* map,
     primary_key_hash & map->modulo_mask;
     
     primary_collision_chain_node =
-    map->primary_key_table[primary_key_collision_chain_bucket_index];
+        find_primary_collision_chain_node(map, primary_key);
     
-    for (;
-         primary_collision_chain_node;
-         primary_collision_chain_node = primary_collision_chain_node->next)
+    if (primary_collision_chain_node)
     {
-        if (primary_collision_chain_node->key_pair->primary_key_hash
-            == primary_key_hash)
-        {
-            if (map->primary_key_equality(
-                        primary_key,
-                        primary_collision_chain_node->key_pair->primary_key))
-            {
-                return_value = primary_collision_chain_node->key_pair
-                                                           ->secondary_key;
-                update_secondary_key(map,
-                                     primary_collision_chain_node,
-                                     secondary_key);
-                return return_value;
-            }
-        }
-    }
-    
-    if (add_new_mapping(map, primary_key, secondary_key))
-    {
-        return NULL;
+        return update_secondary_key(map,
+                                    primary_collision_chain_node,
+                                    secondary_key);
     }
     else
     {
-        return map->error_sentinel;
+        add_new_mapping(map, primary_key, secondary_key);
+        return NULL;
     }
 }
 
@@ -783,41 +802,22 @@ void* bidirectional_hash_map_t_put_by_secondary(bidirectional_hash_map_t* map,
     secondary_key_hash & map->modulo_mask;
     
     secondary_collision_chain_node =
-    map->secondary_key_table[secondary_key_collision_chain_bucket_index];
+        find_secondary_collision_chain_node(map, secondary_key);
     
-    for (;
-         secondary_collision_chain_node;
-         secondary_collision_chain_node = secondary_collision_chain_node->next)
+    if (secondary_collision_chain_node)
     {
-        if (secondary_collision_chain_node->key_pair->secondary_key_hash
-            == secondary_key_hash)
-        {
-            if (map->secondary_key_equality(
-                    secondary_key,
-                    secondary_collision_chain_node->key_pair->secondary_key))
-            {
-                return_value = secondary_collision_chain_node->key_pair
-                                                             ->primary_key;
-                
-                update_primary_key(map,
-                                   secondary_collision_chain_node,
-                                   primary_key);
-                return return_value;
-            }
-        }
-    }
-    
-    if (add_new_mapping(map, primary_key, secondary_key))
-    {
-        return NULL;
+        return update_primary_key(map,
+                                  secondary_collision_chain_node,
+                                  primary_key);
     }
     else
     {
-        return map->error_sentinel;
+        add_new_mapping(map, primary_key, secondary_key);
+        return NULL;
     }
 }
 
-void* bidiretional_hash_map_t_remove_by_primary_key(
+void* bidirectional_hash_map_t_remove_by_primary_key(
                                                 bidirectional_hash_map_t* map,
                                                 void* primary_key)
 {
@@ -850,7 +850,7 @@ void* bidiretional_hash_map_t_remove_by_primary_key(
     return secondary_key;
 }
 
-void* bidiretional_hash_map_t_remove_by_secondary_key(
+void* bidirectional_hash_map_t_remove_by_secondary_key(
                                                 bidirectional_hash_map_t* map,
                                                 void* secondary_key)
 {
