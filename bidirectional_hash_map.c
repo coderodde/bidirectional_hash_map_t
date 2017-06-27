@@ -390,7 +390,11 @@ static void relink_to_new_tables(
     size_t secondary_collision_chain_bucket_index;
     size_t next_capacity;
     size_t next_modulo_mask;
-    secondary_collision_chain_node_t* secondary_collision_chain_node;
+    
+    secondary_collision_chain_node_t* secondary_collision_chain_node =
+        find_secondary_collision_chain_node_via_primary_collision_chain_node(
+                                                map,
+                                                primary_collision_chain_node);
     
     /********************************************************************
     * Unlink the 'primary_collision_chain_node' from its current chain. *
@@ -398,14 +402,9 @@ static void relink_to_new_tables(
     unlink_primary_collision_chain_node(map, primary_collision_chain_node);
     
     /*********************************************************
-    * Find and unlink the opposite collision chain node of   *
+    * Unlink the opposite collision chain node of            *
     * 'primary_collision_chain_node' from its current chain. *
     *********************************************************/
-    secondary_collision_chain_node =
-        find_secondary_collision_chain_node_via_primary_collision_chain_node(
-                                                map,
-                                                primary_collision_chain_node);
-    
     unlink_secondary_collision_chain_node(map, secondary_collision_chain_node);
     
     /*******************************************************
@@ -468,7 +467,7 @@ static int expand_hash_map(bidirectional_hash_map_t* map)
     primary_collision_chain_node_t* primary_collision_chain_node;
     primary_collision_chain_node_t* primary_collision_chain_node_next;
     
-    next_capacity = map->capacity >> 1;
+    next_capacity = map->capacity << 1;
     
     next_primary_hash_table = calloc(next_capacity,
                                      sizeof(primary_collision_chain_node_t*));
