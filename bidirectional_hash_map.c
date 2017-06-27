@@ -345,9 +345,6 @@ int bidirectional_hash_map_t_init(
     return 1;
 }
 
-/*******************************************************************************
-* This function is responsible for freeing all the memory consumed by the map. *
-*******************************************************************************/
 void bidirectional_hash_map_t_destroy(bidirectional_hash_map_t* map)
 {
     primary_collision_chain_node_t* primary_collision_chain_node;
@@ -746,6 +743,9 @@ static int add_new_mapping(bidirectional_hash_map_t* map,
     map->secondary_key_table[secondary_key_collision_chain_bucket_index] =
     secondary_collision_chain_node;
     
+    /********************************
+    * Deal with the iteration list. *
+    ********************************/ 
     if (map->size == 0)
     {
         map->first_collision_chain_node = primary_collision_chain_node;

@@ -124,6 +124,7 @@ int main()
         
         ASSERT((int) primary_key + 1000 == (int) secondary_key);
     }
+    
     ASSERT(bidirectional_hash_map_iterator_t_has_next(&iterator));
     
     puts("Tests done.");

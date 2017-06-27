@@ -28,8 +28,8 @@ typedef struct key_pair_t {
 key_pair_t;
 
 /********************************************************
- * The collision chain node type for primary key chains. *
- ********************************************************/
+* The collision chain node type for primary key chains. *
+********************************************************/
 typedef struct primary_collision_chain_node_t {
     
     /*************************************************************************
