@@ -154,6 +154,35 @@ find_primary_collision_chain_node_via_secondary_collision_chain_node(
     return primary_collision_chain_node;
 }
 
+/**************************************************************************
+* This function removes 'primary_collision_chain_node' from the iteration *
+* list.                                                                   *
+**************************************************************************/
+static void unlink_primary_collision_chain_node_from_iteraton_list(
+                                                                   bidirectional_hash_map_t* map,
+                                                                   primary_collision_chain_node_t* primary_collision_chain_node)
+{
+    if (primary_collision_chain_node->up == NULL)
+    {
+        map->first_collision_chain_node = primary_collision_chain_node->down;
+    }
+    else
+    {
+        primary_collision_chain_node->up->down =
+        primary_collision_chain_node->down;
+    }
+    
+    if (primary_collision_chain_node->down == NULL)
+    {
+        map->last_collision_chain_node = primary_collision_chain_node->up;
+    }
+    else
+    {
+        primary_collision_chain_node->down->up =
+        primary_collision_chain_node->up;
+    }
+}
+
 /****************************************************************************
 * This function is responsible for removing a primary/secondary key mapping *
 * from the bidirectional hash map.                                          *
@@ -168,6 +197,9 @@ static void remove_mapping(
                                                 primary_collision_chain_node);
     
     free(primary_collision_chain_node->key_pair);
+    unlink_primary_collision_chain_node_from_iteraton_list(
+                                                map,
+                                                primary_collision_chain_node);
     
     /*****************************************************
     * Unlink and purge the primary collision chain node: *
@@ -637,7 +669,10 @@ static int add_new_mapping(bidirectional_hash_map_t* map,
     
     if (map->size > map->capacity * map->load_factor)
     {
-        expand_hash_map(map);
+        if (!expand_hash_map(map))
+        {
+            return 0;
+        }
     }
     
     key_pair = malloc(sizeof(*key_pair));
@@ -713,49 +748,21 @@ static int add_new_mapping(bidirectional_hash_map_t* map,
     
     if (map->size == 0)
     {
-        primary_collision_chain_node->up = NULL;
-        primary_collision_chain_node->down = NULL;
         map->first_collision_chain_node = primary_collision_chain_node;
         map->last_collision_chain_node = primary_collision_chain_node;
+        primary_collision_chain_node->up = NULL;
+        primary_collision_chain_node->down = NULL;
     }
     else
     {
-        primary_collision_chain_node->down = NULL;
         primary_collision_chain_node->up = map->last_collision_chain_node;
+        primary_collision_chain_node->down = NULL;
+        map->last_collision_chain_node->down = primary_collision_chain_node;
         map->last_collision_chain_node = primary_collision_chain_node;
     }
     
     map->size++;
     return 1;
-}
-
-/**************************************************************************
-* This function removes 'primary_collision_chain_node' from the iteration *
-* list.                                                                   *
-**************************************************************************/
-static void unlink_primary_collision_chain_node_from_iteraton_list(
-                bidirectional_hash_map_t* map,
-                primary_collision_chain_node_t* primary_collision_chain_node)
-{
-    if (primary_collision_chain_node->up == NULL)
-    {
-        map->first_collision_chain_node = primary_collision_chain_node->down;
-    }
-    else
-    {
-        primary_collision_chain_node->up->down =
-        primary_collision_chain_node->down;
-    }
-    
-    if (primary_collision_chain_node->down == NULL)
-    {
-        map->last_collision_chain_node = primary_collision_chain_node->up;
-    }
-    else
-    {
-        primary_collision_chain_node->down->up =
-        primary_collision_chain_node->up;
-    }
 }
 
 void* bidirectional_hash_map_t_put_by_primary(bidirectional_hash_map_t* map,

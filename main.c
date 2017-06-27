@@ -64,15 +64,22 @@ int main()
     
     for (i = 0; i < 32; ++i)
     {
-        bidirectional_hash_map_t_put_by_secondary(&map, i, 32 + i);
+        ASSERT(bidirectional_hash_map_t_size(&map) == 32 + i);
+        bidirectional_hash_map_t_put_by_secondary(&map, 32 + i, i);
+        ASSERT(bidirectional_hash_map_t_size(&map) == 33 + i);
     }
     
-    puts("yo");
     for (i = 0; i < 32; ++i)
     {
-        printf("%d\n", i);
         ret = bidirectional_hash_map_t_get_by_primary_key(&map, i);
         ASSERT((int) ret == i + 32);
+    }
+    
+    for (i = 0; i < 32; ++i)
+    {
+        ret = bidirectional_hash_map_t_get_by_secondary_key(&map, i);
+        ASSERT((int) ret == i + 32);
+        
     }
         
     return 0;
