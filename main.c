@@ -44,7 +44,11 @@ int main()
     int i ;
     void* ret;
     void* error_sentinel = malloc(1);
+    void* primary_key;
+    void* secondary_key;
     bidirectional_hash_map_t map;
+    bidirectional_hash_map_iterator_t iterator;
+    
     bidirectional_hash_map_t_init(&map,
                                   0,
                                   1.0f,
@@ -60,7 +64,6 @@ int main()
         bidirectional_hash_map_t_put_by_primary(&map, i, 32 + i);
         ASSERT(bidirectional_hash_map_t_size(&map) == i + 1);
     }
-    
     
     for (i = 0; i < 32; ++i)
     {
@@ -81,6 +84,48 @@ int main()
         ASSERT((int) ret == i + 32);
         
     }
+    
+    for (i = 0; i < 32; ++i)
+    {
+        ASSERT(bidirectional_hash_map_t_contains_primary_key(&map, i));
+        ASSERT(bidirectional_hash_map_t_contains_primary_key(&map, i + 32));
+        ASSERT(bidirectional_hash_map_t_contains_secondary_key(&map, i));
+        ASSERT(bidirectional_hash_map_t_contains_secondary_key(&map, i + 32));
+    }
+    
+    bidirectional_hash_map_t_destroy(&map);
+    
+    bidirectional_hash_map_t_init(&map,
+                                  0,
+                                  1.0f,
+                                  primary_key_hasher,
+                                  secondary_key_hasher,
+                                  primary_key_equality,
+                                  secondary_key_equality,
+                                  error_sentinel);
+    
+    for (i = 0; i < 10; ++i)
+    {
+        ASSERT(bidirectional_hash_map_t_put_by_primary(&map, i, i + 1000)
+               == NULL);
+    }
+    
+    ASSERT(bidirectional_hash_map_t_remove_by_primary_key(&map, 1) == 1001);
+    ASSERT(bidirectional_hash_map_t_remove_by_secondary_key(&map, 1002) == 2);
+    
+    bidirectional_hash_map_iterator_t_init(&map, &iterator);
+    
+    for (i = 0; i < 8; ++i)
+    {
+        ASSERT(bidirectional_hash_map_iterator_t_has_next(&iterator));
+        bidirectional_hash_map_iterator_t_next(&iterator,
+                                               &primary_key,
+                                               &secondary_key);
         
+        ASSERT((int) primary_key + 1000 == (int) secondary_key);
+    }
+    ASSERT(bidirectional_hash_map_iterator_t_has_next(&iterator));
+    
+    puts("Tests done.");
     return 0;
 }
