@@ -11,6 +11,9 @@ static size_t max_size_t(size_t a, size_t b)
     return a > b ? a : b;
 }
 
+/****************************************************************
+* Returns an integer that is a power of two no less than 'num'. *
+****************************************************************/
 static size_t to_power_of_two(size_t num)
 {
     size_t ret = 1;
@@ -681,6 +684,35 @@ static int add_new_mapping(bidirectional_hash_map_t* map,
     return 1;
 }
 
+/**************************************************************************
+* This function removes 'primary_collision_chain_node' from the iteration *
+* list.                                                                   *
+**************************************************************************/
+static void unlink_primary_collision_chain_node_from_iteraton_list(
+                bidirectional_hash_map_t* map,
+                primary_collision_chain_node_t* primary_collision_chain_node)
+{
+    if (primary_collision_chain_node->up == NULL)
+    {
+        map->first_collision_chain_node = primary_collision_chain_node->down;
+    }
+    else
+    {
+        primary_collision_chain_node->up->down =
+        primary_collision_chain_node->down;
+    }
+    
+    if (primary_collision_chain_node->down == NULL)
+    {
+        map->last_collision_chain_node = primary_collision_chain_node->up;
+    }
+    else
+    {
+        primary_collision_chain_node->down->up =
+        primary_collision_chain_node->up;
+    }
+}
+
 /*******************************************************************************
 * This function puts a mapping ('primary_key', 'secondary_key') via            *
 * 'primary_key'. If this map already maps 'primary_key', its corresponding     *
@@ -807,6 +839,10 @@ void* bidiretional_hash_map_t_remove_by_primary_key(
     unlink_secondary_collision_chain_node(map, secondary_collision_chain_node);
     secondary_key = primary_collision_chain_node->key_pair->secondary_key;
     
+    unlink_primary_collision_chain_node_from_iteraton_list(
+                                                map,
+                                                primary_collision_chain_node);
+    
     free(primary_collision_chain_node->key_pair);
     free(primary_collision_chain_node);
     free(secondary_collision_chain_node);
@@ -835,6 +871,12 @@ void* bidiretional_hash_map_t_remove_by_secondary_key(
     unlink_primary_collision_chain_node(map, primary_collision_chain_node);
     unlink_secondary_collision_chain_node(map, secondary_collision_chain_node);
     primary_key = primary_collision_chain_node->key_pair->primary_key;
+    
+    unlink_primary_collision_chain_node_from_iteraton_list(
+                                                map,
+                                                primary_collision_chain_node);
+    
+    unlink_primary_collision_chain_node_from_iteraton_list(map, primary_collision_chain_node);
     
     free(primary_collision_chain_node->key_pair);
     free(primary_collision_chain_node);
@@ -905,3 +947,40 @@ int bidirectional_hash_map_t_contains_secondary_key(
     return secondary_collision_chain_node != NULL ? 1 : 0;
 }
 
+int bidirectional_hash_map_iterator_t_init(
+                                           bidirectional_hash_map_t* map,
+                                           bidirectional_hash_map_iterator_t* iterator)
+{
+    if (!map)
+    {
+        return 0;
+    }
+    
+    iterator->current_node = map->first_collision_chain_node;
+    iterator->iterated = 0;
+    iterator->map_size = map->size;
+    
+    return 1;
+}
+
+int bidirectional_hash_map_iterator_t_has_next(
+                                               bidirectional_hash_map_iterator_t* iterator)
+{
+    return iterator->iterated < iterator->map_size;
+}
+
+int bidirectional_hash_map_iterator_t_next(
+                                           bidirectional_hash_map_iterator_t* iterator,
+                                           void** primary_key_ptr,
+                                           void** secondary_key_ptr)
+{
+    if (iterator->iterated >= iterator->map_size)
+    {
+        return 0;
+    }
+    
+    *primary_key_ptr = iterator->current_node->key_pair->primary_key;
+    *secondary_key_ptr = iterator->current_node->key_pair->secondary_key;
+    iterator->current_node = iterator->current_node->down;
+    return 1;
+}

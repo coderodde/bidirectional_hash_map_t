@@ -163,6 +163,25 @@ typedef struct bidirectional_hash_map_t {
 }
 bidirectional_hash_map_t;
 
+typedef struct bidirectional_hash_map_iterator_t {
+    
+    /************************************
+    * The mapping next to iterate over. *
+    ************************************/
+    struct primary_collision_chain_node_t* current_node;
+    
+    /**************************************
+    * Number of mappings iterated so far. *
+    **************************************/
+    size_t iterated;
+    
+    /**************************************
+    * The size of the map being iterated. *
+    **************************************/
+    size_t map_size;
+}
+bidirectional_hash_map_iterator_t;
+
 /****************************************************************************
 * Builds a new, empty bidirectional hash map.|                              *
 *--------------------------------------------+                              *
@@ -325,5 +344,42 @@ int bidirectional_hash_map_t_contains_secondary_key(
                                                 bidirectional_hash_map_t* map,
                                                 void* secondary_key);
 
+/**************************************************************
+* Initializes an iterator.|                                   *
+*-------------------------+                                   *
+* map ------ the map to iterate.                              *
+* iterator - the iterator being initialized.                  *
+*-----------------------------------------------------------+ *
+* RETURNS: 1 if initialization is successfull. 0 otherwise. | *
+**************************************************************/
+int bidirectional_hash_map_iterator_t_init(
+                                bidirectional_hash_map_t* map,
+                                bidirectional_hash_map_iterator_t* iterator);
+
+/********************************************************
+* Queries whether there is more mappings to iterate.|   *
+*---------------------------------------------------+   *
+* iterator - the iterator to query.                     *
+*-----------------------------------------------------+ *
+* RETURNS: 1 if there is more to iterate. 0 otherwise | *
+********************************************************/
+int bidirectional_hash_map_iterator_t_has_next(
+                                bidirectional_hash_map_iterator_t* iterator);
+
+/*******************************************************************************
+* Iterates over a mapping in the map.|                                         *
+*------------------------------------+                                         *
+* iterator ---------- the iterator.                                            *
+* primary_key_ptr --- the pointer to the location where to store the primary   *
+*                     key.                                                     *
+* secondary_key_ptr - the pointer to the location where to store the secondary *
+*                     key.                                                     *
+*-----------------------------------------------------+                        *
+* RETURNS: 1 if iteration was successful, 0 otherwise.|                        *
+ ******************************************************************************/
+int bidirectional_hash_map_iterator_t_next(
+                                    bidirectional_hash_map_iterator_t* iterator,
+                                    void** primary_key_ptr,
+                                    void** secondary_key_ptr);
 
 #endif /* BIDIRECTIONAL_HASH_MAP_H */
