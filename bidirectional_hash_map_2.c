@@ -620,23 +620,29 @@ static void fix_secondary_collision_tree_after_deletion(
     }
 }
 
+/************************************************************************
+* Unlinks 'node' from its collision tree when 'node' has both children. *
+************************************************************************/
 static void unlink_primary_collision_tree_node_with_both_children(
                     bidirectional_hash_map_2_t* map,
-                    primary_collision_tree_node_t* primary_collision_tree_node)
+                    primary_collision_tree_node_t* node)
 {
-    primary_collision_tree_node_t* successor_of_primary_collision_tree_node =
-    get_minimum_tree_node_of(primary_collision_tree_node->right);
+    primary_collision_tree_node_t* successor =
+    get_minimum_tree_node_of(node->right);
+    
+    size_t node_bucket_index = node->key_pair->primary_key_hash
+                             & map->modulo_mask;
     
     primary_collision_tree_node_t* child_of_successor;
     primary_collision_tree_node_t* parent_of_successor;
     
-    primary_collision_tree_node->key_pair =
-    successor_of_primary_collision_tree_node->key_pair;
+    node->key_pair = successor->key_pair;
     
-    child_of_successor  = successor_of_primary_collision_tree_node->right;
-    parent_of_successor = successor_of_primary_collision_tree_node->parent;
+    child_of_successor  = successor->right;
+    parent_of_successor = successor->parent;
     
-    if (parent_of_successor->left == successor_of_primary_collision_tree_node)
+    /* THIS IS STRANGE: */
+    if (parent_of_successor->left == successor)
     {
         parent_of_successor->left = child_of_successor;
     }
@@ -652,8 +658,86 @@ static void unlink_primary_collision_tree_node_with_both_children(
     
     fix_primary_collision_tree_after_deletion(
                                     map,
-                                    11,
-                                    successor_of_primary_collision_tree_node);
+                                    &map->primary_key_table[node_bucket_index],
+                                    successor);
+}
+
+/*************************************************************************
+* Unlinks 'node' from its collision tree when 'node' has only one child. *
+*************************************************************************/
+static void unlink_primary_collision_tree_node_with_one_child(
+                    bidirectional_hash_map_2_t* map,
+                    primary_collision_tree_node_t* node)
+{
+    primary_collision_tree_node_t* child;
+    primary_collision_tree_node_t* parent;
+    
+    size_t node_bucket_index = node->key_pair->primary_key_hash
+                             & map->modulo_mask;
+    
+    if (node->left)
+    {
+        child = node->left;
+    }
+    else
+    {
+        child = node->right;
+    }
+    
+    parent = node->parent;
+    child->parent = parent;
+    
+    if (!parent)
+    {
+        map->primary_key_table[node_bucket_index] = child;
+    }
+    
+    if (node == parent->left)
+    {
+        parent->left = child;
+    }
+    else
+    {
+        parent->right = child;
+    }
+    
+    fix_primary_collision_tree_after_deletion(
+                                    map,
+                                    &map->primary_key_table[node_bucket_index],
+                                    node);
+}
+
+/**********************************************************************
+* Unlinks 'node' from its collision tree when 'node' has no children. *
+**********************************************************************/
+static void unlink_primary_collision_tree_node_with_no_children(
+                                            bidirectional_hash_map_2_t* map,
+                                            primary_collision_tree_node_t* node)
+{
+    primary_collision_tree_node_t* parent = node->parent;
+    
+    size_t node_bucket_index = node->key_pair->primary_key_hash
+                             & map->modulo_mask;
+    
+    if (!parent)
+    {
+        map->primary_key_table[node_bucket_index] = NULL;
+        return;
+    }
+    
+    if (node == parent->left)
+    {
+        parent->left = NULL;
+    }
+    else
+    {
+        parent->right = NULL;
+    }
+    
+    fix_primary_collision_tree_after_deletion(
+                                    map,
+                                    &map->primary_key_table[node_bucket_index],
+                                    node->parent);
 }
 
 /******************************************************************************
@@ -673,7 +757,8 @@ static void unlink_primary_collision_tree_node(
                                                 map,
                                                 primary_collision_tree_node);
     }
-    else if (primary_collision_tree_node->left || primary_collision_tree_node->right)
+    else if (primary_collision_tree_node->left ||
+             primary_collision_tree_node->right)
     {
         /****************************************************
         * 'primary_collision_tree_node' has only one child. *
@@ -693,15 +778,163 @@ static void unlink_primary_collision_tree_node(
     }
 }
 
+
+/************************************************************************
+* Unlinks 'node' from its collision tree when 'node' has both children. *
+************************************************************************/
+static void unlink_secondary_collision_tree_node_with_both_children(
+                                        bidirectional_hash_map_2_t* map,
+                                        secondary_collision_tree_node_t* node)
+{
+    primary_collision_tree_node_t* successor =
+    get_minimum_tree_node_of(node->right);
+    
+    size_t node_bucket_index = node->key_pair->primary_key_hash
+    & map->modulo_mask;
+    
+    primary_collision_tree_node_t* child_of_successor;
+    primary_collision_tree_node_t* parent_of_successor;
+    
+    node->key_pair = successor->key_pair;
+    
+    child_of_successor  = successor->right;
+    parent_of_successor = successor->parent;
+    
+    /* THIS IS STRANGE: */
+    if (parent_of_successor->left == successor)
+    {
+        parent_of_successor->left = child_of_successor;
+    }
+    else
+    {
+        parent_of_successor->right = child_of_successor;
+    }
+    
+    if (child_of_successor)
+    {
+        child_of_successor->parent = parent_of_successor;
+    }
+    
+    fix_primary_collision_tree_after_deletion(
+                                              map,
+                                              &map->primary_key_table[node_bucket_index],
+                                              successor);
+}
+
+/*************************************************************************
+* Unlinks 'node' from its collision tree when 'node' has only one child. *
+*************************************************************************/
+static void unlink_secondary_collision_tree_node_with_one_child(
+                                        bidirectional_hash_map_2_t* map,
+                                        secondary_collision_tree_node_t* node)
+{
+    primary_collision_tree_node_t* child;
+    primary_collision_tree_node_t* parent;
+    
+    size_t node_bucket_index = node->key_pair->primary_key_hash
+    & map->modulo_mask;
+    
+    if (node->left)
+    {
+        child = node->left;
+    }
+    else
+    {
+        child = node->right;
+    }
+    
+    parent = node->parent;
+    child->parent = parent;
+    
+    if (!parent)
+    {
+        map->primary_key_table[node_bucket_index] = child;
+    }
+    
+    if (node == parent->left)
+    {
+        parent->left = child;
+    }
+    else
+    {
+        parent->right = child;
+    }
+    
+    fix_primary_collision_tree_after_deletion(
+                                              map,
+                                              &map->primary_key_table[node_bucket_index],
+                                              node);
+}
+
+/**********************************************************************
+* Unlinks 'node' from its collision tree when 'node' has no children. *
+**********************************************************************/
+static void unlink_secondary_collision_tree_node_with_no_children(
+                                        bidirectional_hash_map_2_t* map,
+                                        secondary_collision_tree_node_t* node)
+{
+    primary_collision_tree_node_t* parent = node->parent;
+    
+    size_t node_bucket_index = node->key_pair->primary_key_hash
+    & map->modulo_mask;
+    
+    if (!parent)
+    {
+        map->primary_key_table[node_bucket_index] = NULL;
+        return;
+    }
+    
+    if (node == parent->left)
+    {
+        parent->left = NULL;
+    }
+    else
+    {
+        parent->right = NULL;
+    }
+    
+    fix_primary_collision_tree_after_deletion(
+                                              map,
+                                              &map->primary_key_table[node_bucket_index],
+                                              node->parent);
+}
+
 /***************************************************************************
 * This function unlinks 'secondary_collision_tree_node' from its collision *
 * tree.                                                                    *
 ***************************************************************************/
 static void unlink_secondary_collision_tree_node(
                 bidirectional_hash_map_2_t* map,
-                secondary_collision_tree_node_t* secondary_collision_chain_node)
+                secondary_collision_tree_node_t* secondary_collision_tree_node)
 {
-    /* TODO! */
+    if (secondary_collision_tree_node->left &&
+        secondary_collision_tree_node->right)
+    {
+        /*****************************************************
+        * 'secondary_collision_tree_node' has both children. *
+        *****************************************************/
+        unlink_secondary_collision_tree_node_with_both_children(
+                                                map,
+                                                secondary_collision_tree_node);
+    }
+    else if (secondary_collision_tree_node->left || secondary_collision_tree_node->right)
+    {
+        /******************************************************
+        * 'secondary_collision_tree_node' has only one child. *
+        ******************************************************/
+        unlink_secondary_collision_tree_node_with_one_child(
+                                                map,
+                                                secondary_collision_tree_node);
+    }
+    else
+    {
+        /***************************************************
+        * 'secondary_collision_tree_node' has no children. *
+        ***************************************************/
+        unlink_secondary_collision_tree_node_with_no_children(
+                                                map,
+                                                secondary_collision_tree_node);
+    }
 }
 
 /************************************************************
