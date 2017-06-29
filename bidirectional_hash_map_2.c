@@ -90,6 +90,7 @@ static primary_collision_tree_node_t* get_primary_collision_tree_node_successor(
     return parent_of_primary_collision_tree_node;
 }
 
+// OK
 /***********************************************************
 * Performs left rotation of a primary collision tree node. *
 ***********************************************************/
@@ -115,7 +116,7 @@ primary_collision_tree_left_rotate(primary_collision_tree_node_t* node_1)
     return node_2;
 }
 
-
+// OK
 /************************************************************
 * Performs right rotation of a primary collision tree node. *
 ************************************************************/
@@ -135,7 +136,7 @@ primary_collision_tree_right_rotate(primary_collision_tree_node_t* node_1)
     }
     
     node_1->height = int_max(get_primary_tree_node_height(node_1->left),
-                             get_primary_tree_node_height(node_2->right)) + 1;
+                             get_primary_tree_node_height(node_1->right)) + 1;
                              
     node_2->height = int_max(get_primary_tree_node_height(node_2->left),
                              get_primary_tree_node_height(node_2->right)) + 1;
@@ -143,8 +144,9 @@ primary_collision_tree_right_rotate(primary_collision_tree_node_t* node_1)
     return node_2;
 }
 
+// OK
 /**************************************************************************
-* Perfroms a double right/left rotation of a primary collision tree node. *
+* Performs a double right/left rotation of a primary collision tree node. *
 **************************************************************************/
 static primary_collision_tree_node_t*
 primary_collision_tree_right_left_rotate(primary_collision_tree_node_t* node_1)
@@ -154,8 +156,9 @@ primary_collision_tree_right_left_rotate(primary_collision_tree_node_t* node_1)
     return primary_collision_tree_left_rotate(node_1);
 }
 
+// OK
 /**************************************************************************
-* Perfroms a double left/right rotation of a primary collision tree node. *
+* Performs a double left/right rotation of a primary collision tree node. *
 **************************************************************************/
 static primary_collision_tree_node_t*
 primary_collision_tree_left_right_rotate(primary_collision_tree_node_t* node_1)
@@ -165,18 +168,19 @@ primary_collision_tree_left_right_rotate(primary_collision_tree_node_t* node_1)
     return primary_collision_tree_right_rotate(node_1);
 }
 
+// OK
 /****************************************************************************
 * This function is responsible for balancing a primary collision tree after *
 * inserting a node into it.                                                 *
 ****************************************************************************/
 static void fix_primary_collision_tree_after_insertion(
                                         bidirectional_hash_map_2_t* map,
-                                        primary_collision_tree_node_t** root,
                                         primary_collision_tree_node_t* node)
 {
-    primary_collision_tree_node_t* parent = node->parent;
     primary_collision_tree_node_t* grand_parent;
+    primary_collision_tree_node_t* parent = node->parent;
     primary_collision_tree_node_t* sub_tree;
+    size_t node_bucket_index;
     
     while (parent)
     {
@@ -197,7 +201,9 @@ static void fix_primary_collision_tree_after_insertion(
             
             if (!grand_parent)
             {
-                *root = sub_tree;
+                node_bucket_index = node->key_pair->primary_key_hash
+                                  & map->modulo_mask;
+                map->primary_key_table[node_bucket_index] = sub_tree;
             }
             else if (grand_parent->left == parent)
             {
@@ -232,9 +238,12 @@ static void fix_primary_collision_tree_after_insertion(
                 sub_tree = primary_right_left_rotate(parent);
             }
             
+            // OPTIMIZE?
             if (!grand_parent)
             {
-                *root = sub_tree;
+                node_bucket_index = node->key_pair->primary_key_hash
+                                  & map->modulo_mask;
+                map->primary_key_table[node_bucket_index] = sub_tree;
             }
             else if (grand_parent->left == parent)
             {
@@ -247,7 +256,9 @@ static void fix_primary_collision_tree_after_insertion(
             
             if (grand_parent)
             {
-                grand_parent->right = sub_tree;
+                grand_parent->height =
+                int_max(get_primary_tree_node_height(grand_parent->left),
+                        get_primary_tree_node_height(grand_parent->right)) + 1;
             }
             
             return;
@@ -261,18 +272,19 @@ static void fix_primary_collision_tree_after_insertion(
     }
 }
 
+// OK
 /****************************************************************************
 * This function is responsible for balancing a primary collision tree after *
 * deleting a node from it.                                                  *
 ****************************************************************************/
 static void fix_primary_collision_tree_after_deletion(
                                         bidirectional_hash_map_2_t* map,
-                                        primary_collision_tree_node_t** root,
                                         primary_collision_tree_node_t* node)
 {
-    primary_collision_tree_node_t* parent = node->parent;
     primary_collision_tree_node_t* grand_parent;
+    primary_collision_tree_node_t* parent = node->parent;
     primary_collision_tree_node_t* sub_tree;
+    size_t node_bucket_index;
     
     while (parent)
     {
@@ -291,9 +303,12 @@ static void fix_primary_collision_tree_after_deletion(
                 sub_tree = primary_left_right_rotate(parent);
             }
             
+            // OPTIMIZE?
             if (!grand_parent)
             {
-                *root = sub_tree;
+                node_bucket_index = node->key_pair->primary_key_hash
+                                  & map->modulo_mask;
+                map->primary_key_table[node_bucket_index] = sub_tree;
             }
             else if (grand_parent->left == parent)
             {
@@ -328,7 +343,9 @@ static void fix_primary_collision_tree_after_deletion(
             
             if (!grand_parent)
             {
-                *root = sub_tree;
+                node_bucket_index = node->key_pair->primary_key_hash
+                                  & map->modulo_mask;
+                map->primary_key_table[node_bucket_index] = sub_tree;
             }
             else if (grand_parent->left == parent)
             {
@@ -341,7 +358,9 @@ static void fix_primary_collision_tree_after_deletion(
             
             if (grand_parent)
             {
-                grand_parent->right = sub_tree;
+                grand_parent->height =
+                int_max(get_primary_tree_node_height(grand_parent->left),
+                        get_primary_tree_node_height(grand_parent->right)) + 1;
             }
         }
         
@@ -354,6 +373,7 @@ static void fix_primary_collision_tree_after_deletion(
 }
 
 
+// OK
 /*************************************************************
 * Performs left rotation of a secondary collision tree node. *
 *************************************************************/
@@ -379,7 +399,7 @@ secondary_collision_tree_left_rotate(secondary_collision_tree_node_t* node_1)
     return node_2;
 }
 
-
+// OK
 /**************************************************************
 * Performs right rotation of a secondary collision tree node. *
 **************************************************************/
@@ -399,15 +419,16 @@ secondary_collision_tree_right_rotate(secondary_collision_tree_node_t* node_1)
     }
     
     node_1->height = int_max(get_secondary_tree_node_height(node_1->left),
-                             get_secondary_tree_node_height(node_2->right)) + 1;
+                             get_secondary_tree_node_height(node_1->right)) + 1;
     node_2->height = int_max(get_secondary_tree_node_height(node_2->left),
                              get_secondary_tree_node_height(node_2->right)) + 1;
     
     return node_2;
 }
 
+// OK
 /****************************************************************************
-* Perfroms a double right/left rotation of a secondary collision tree node. *
+* Performs a double right/left rotation of a secondary collision tree node. *
 ****************************************************************************/
 static secondary_collision_tree_node_t*
 secondary_collision_tree_right_left_rotate(
@@ -418,10 +439,11 @@ secondary_collision_tree_right_left_rotate(
     return secondary_collision_tree_left_rotate(node_1);
 }
 
-/****************************************************************************
-* Perfroms a double left/right rotation of a secondary collision tree node. *
-****************************************************************************/
-static secondary_collision_tree_node_t*
+// OK
+/**************************************************************************
+* Performs a double left/right rotation of a primary collision tree node. *
+**************************************************************************/
+static primary_collision_tree_node_t*
 secondary_collision_tree_left_right_rotate(
                                         secondary_collision_tree_node_t* node_1)
 {
@@ -430,18 +452,19 @@ secondary_collision_tree_left_right_rotate(
     return secondary_collision_tree_right_rotate(node_1);
 }
 
-/*******************************************************************************
+// OK
+/******************************************************************************
 * This function is responsible for balancing a secondary collision tree after *
 * inserting a node into it.                                                   *
 ******************************************************************************/
 static void fix_secondary_collision_tree_after_insertion(
                                         bidirectional_hash_map_2_t* map,
-                                        secondary_collision_tree_node_t** root,
                                         secondary_collision_tree_node_t* node)
 {
-    secondary_collision_tree_node_t* parent = node->parent;
     secondary_collision_tree_node_t* grand_parent;
+    secondary_collision_tree_node_t* parent = node->parent;
     secondary_collision_tree_node_t* sub_tree;
+    size_t node_bucket_index;
     
     while (parent)
     {
@@ -462,7 +485,9 @@ static void fix_secondary_collision_tree_after_insertion(
             
             if (!grand_parent)
             {
-                *root = sub_tree;
+                node_bucket_index = node->key_pair->primary_key_hash
+                                  & map->modulo_mask;
+                map->secondary_key_table[node_bucket_index] = sub_tree;
             }
             else if (grand_parent->left == parent)
             {
@@ -498,9 +523,12 @@ static void fix_secondary_collision_tree_after_insertion(
                 sub_tree = secondary_right_left_rotate(parent);
             }
             
+            // OPTIMIZE?
             if (!grand_parent)
             {
-                *root = sub_tree;
+                node_bucket_index = node->key_pair->secondary_key_hash
+                                  & map->modulo_mask;
+                map->secondary_key_table[node_bucket_index] = sub_tree;
             }
             else if (grand_parent->left == parent)
             {
@@ -513,7 +541,10 @@ static void fix_secondary_collision_tree_after_insertion(
             
             if (grand_parent)
             {
-                grand_parent->right = sub_tree;
+                grand_parent->height =
+                int_max(get_secondary_tree_node_height(grand_parent->left),
+                        get_secondary_tree_node_height(grand_parent->right))
+                    + 1;
             }
             
             return;
@@ -527,18 +558,19 @@ static void fix_secondary_collision_tree_after_insertion(
     }
 }
 
+// OK
 /******************************************************************************
 * This function is responsible for balancing a secondary collision tree after *
 * deleting a node from it.                                                    *
 ******************************************************************************/
 static void fix_secondary_collision_tree_after_deletion(
                                         bidirectional_hash_map_2_t* map,
-                                        secondary_collision_tree_node_t** root,
                                         secondary_collision_tree_node_t* node)
 {
-    secondary_collision_tree_node_t* parent = node->parent;
     secondary_collision_tree_node_t* grand_parent;
+    secondary_collision_tree_node_t* parent = node->parent;
     secondary_collision_tree_node_t* sub_tree;
+    size_t node_bucket_index;
     
     while (parent)
     {
@@ -557,9 +589,12 @@ static void fix_secondary_collision_tree_after_deletion(
                 sub_tree = secondary_left_right_rotate(parent);
             }
             
+            // OPTIMIZE?
             if (!grand_parent)
             {
-                *root = sub_tree;
+                node_bucket_index = node->key_pair->secondary_key_hash
+                                  & map->modulo_mask;
+                map->secondary_key_table[node_bucket_index] = sub_tree;
             }
             else if (grand_parent->left == parent)
             {
@@ -595,7 +630,9 @@ static void fix_secondary_collision_tree_after_deletion(
             
             if (!grand_parent)
             {
-                *root = sub_tree;
+                node_bucket_index = node->key_pair->secondary_key_hash
+                                  & map->modulo_mask;
+                map->secondary_key_table[node_bucket_index] = sub_tree;
             }
             else if (grand_parent->left == parent)
             {
@@ -608,7 +645,10 @@ static void fix_secondary_collision_tree_after_deletion(
             
             if (grand_parent)
             {
-                grand_parent->right = sub_tree;
+                grand_parent->height =
+                int_max(get_secondary_tree_node_height(grand_parent->left),
+                        get_secondary_tree_node_height(grand_parent->right))
+                    + 1;
             }
         }
         
@@ -656,10 +696,7 @@ static void unlink_primary_collision_tree_node_with_both_children(
         child_of_successor->parent = parent_of_successor;
     }
     
-    fix_primary_collision_tree_after_deletion(
-                                    map,
-                                    &map->primary_key_table[node_bucket_index],
-                                    successor);
+    fix_primary_collision_tree_after_deletion(map, successor);
 }
 
 /*************************************************************************
@@ -690,6 +727,7 @@ static void unlink_primary_collision_tree_node_with_one_child(
     if (!parent)
     {
         map->primary_key_table[node_bucket_index] = child;
+        return;
     }
     
     if (node == parent->left)
@@ -701,10 +739,7 @@ static void unlink_primary_collision_tree_node_with_one_child(
         parent->right = child;
     }
     
-    fix_primary_collision_tree_after_deletion(
-                                    map,
-                                    &map->primary_key_table[node_bucket_index],
-                                    node);
+    fix_primary_collision_tree_after_deletion(map, node);
 }
 
 /**********************************************************************
@@ -734,10 +769,7 @@ static void unlink_primary_collision_tree_node_with_no_children(
         parent->right = NULL;
     }
     
-    fix_primary_collision_tree_after_deletion(
-                                    map,
-                                    &map->primary_key_table[node_bucket_index],
-                                    node->parent);
+    fix_primary_collision_tree_after_deletion(map, node->parent);
 }
 
 /******************************************************************************
@@ -815,10 +847,7 @@ static void unlink_secondary_collision_tree_node_with_both_children(
         child_of_successor->parent = parent_of_successor;
     }
     
-    fix_primary_collision_tree_after_deletion(
-                                              map,
-                                              &map->primary_key_table[node_bucket_index],
-                                              successor);
+    fix_primary_collision_tree_after_deletion(map, successor);
 }
 
 /*************************************************************************
@@ -849,6 +878,7 @@ static void unlink_secondary_collision_tree_node_with_one_child(
     if (!parent)
     {
         map->primary_key_table[node_bucket_index] = child;
+        return;
     }
     
     if (node == parent->left)
@@ -860,10 +890,7 @@ static void unlink_secondary_collision_tree_node_with_one_child(
         parent->right = child;
     }
     
-    fix_primary_collision_tree_after_deletion(
-                                              map,
-                                              &map->primary_key_table[node_bucket_index],
-                                              node);
+    fix_primary_collision_tree_after_deletion(map, node);
 }
 
 /**********************************************************************
@@ -893,10 +920,7 @@ static void unlink_secondary_collision_tree_node_with_no_children(
         parent->right = NULL;
     }
     
-    fix_primary_collision_tree_after_deletion(
-                                              map,
-                                              &map->primary_key_table[node_bucket_index],
-                                              node->parent);
+    fix_primary_collision_tree_after_deletion(map, node->parent);
 }
 
 /***************************************************************************
