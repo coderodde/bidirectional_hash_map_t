@@ -226,7 +226,7 @@ bidirectional_hash_map_2_iterator_t;
 *-----------------------------------------------------------+               *
 * RETURNS: 1 if initialization was successfull, 0 otherwise.|               *
 ****************************************************************************/
-int bidirectional_hash_map_t_init(
+int bidirectional_hash_map_2_t_init(
                                   bidirectional_hash_map_2_t* map,
                                   size_t initial_capacity,
                                   float load_factor,
