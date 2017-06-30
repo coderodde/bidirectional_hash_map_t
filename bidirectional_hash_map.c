@@ -830,16 +830,18 @@ void* bidirectional_hash_map_t_remove_by_primary_key(
     primary_collision_chain_node_t* primary_collision_chain_node =
         find_primary_collision_chain_node(map, primary_key);
     
-    secondary_collision_chain_node_t* secondary_collision_chain_node =
-        find_secondary_collision_chain_node_via_primary_collision_chain_node(
-                                                map,
-                                                primary_collision_chain_node);
+    secondary_collision_chain_node_t* secondary_collision_chain_node;
     void* secondary_key;
     
     if (primary_collision_chain_node == NULL)
     {
         return NULL;
     }
+    
+    secondary_collision_chain_node =
+    find_secondary_collision_chain_node_via_primary_collision_chain_node(
+                                                map,
+                                                primary_collision_chain_node);
     
     unlink_primary_collision_chain_node(map, primary_collision_chain_node);
     unlink_secondary_collision_chain_node(map, secondary_collision_chain_node);
@@ -863,16 +865,18 @@ void* bidirectional_hash_map_t_remove_by_secondary_key(
     secondary_collision_chain_node_t* secondary_collision_chain_node =
         find_secondary_collision_chain_node(map, secondary_key);
     
-    primary_collision_chain_node_t* primary_collision_chain_node =
-        find_primary_collision_chain_node_via_secondary_collision_chain_node(
-                                                map,
-                                                secondary_collision_chain_node);
+    primary_collision_chain_node_t* primary_collision_chain_node;
     void* primary_key;
     
     if (secondary_collision_chain_node == NULL)
     {
         return NULL;
     }
+    
+    primary_collision_chain_node =
+    find_primary_collision_chain_node_via_secondary_collision_chain_node(
+                                                map,
+                                                secondary_collision_chain_node);
     
     unlink_primary_collision_chain_node(map, primary_collision_chain_node);
     unlink_secondary_collision_chain_node(map, secondary_collision_chain_node);
@@ -897,19 +901,12 @@ void* bidirectional_hash_map_t_get_by_primary_key(bidirectional_hash_map_t* map,
     primary_collision_chain_node_t* primary_collision_chain_node =
         find_primary_collision_chain_node(map, primary_key);
     
-    secondary_collision_chain_node_t* secondary_collision_chain_node;
-    
     if (primary_collision_chain_node == NULL)
     {
         return NULL;
     }
     
-    secondary_collision_chain_node =
-        find_secondary_collision_chain_node_via_primary_collision_chain_node(
-                                                map,
-                                                primary_collision_chain_node);
-    
-    return secondary_collision_chain_node->key_pair->secondary_key;
+    return primary_collision_chain_node->key_pair->secondary_key;
 }
 
 void* bidirectional_hash_map_t_get_by_secondary_key(
@@ -919,17 +916,10 @@ void* bidirectional_hash_map_t_get_by_secondary_key(
     secondary_collision_chain_node_t* secondary_collision_chain_node =
         find_secondary_collision_chain_node(map, secondary_key);
     
-    primary_collision_chain_node_t* primary_collision_chain_node;
-    
     if (secondary_collision_chain_node == NULL)
     {
         return NULL;
     }
-    
-    primary_collision_chain_node =
-        find_primary_collision_chain_node_via_secondary_collision_chain_node(
-                                                map,
-                                                secondary_collision_chain_node);
     
     return secondary_collision_chain_node->key_pair->primary_key;
 }

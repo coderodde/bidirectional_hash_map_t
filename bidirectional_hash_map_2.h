@@ -149,17 +149,6 @@ typedef struct bidirectional_hash_map_2_t {
     ***************************************************************************/
     size_t (*secondary_key_hasher)(void* secondary_key);
     
-    /*****************************************************
-    * The function for comparing two given primary keys. *
-    *****************************************************/
-    int    (*primary_key_equality)(void* primary_key_1, void* primary_key_2);
-    
-    /*******************************************************
-    * The function for comparing two given secondary keys. *
-    *******************************************************/
-    int    (*secondary_key_equality)(void* secondary_key_1,
-                                     void* secondary_key_2);
-    
     /***********************************************
     * The function for comparing the primary keys. *
     ***********************************************/
@@ -220,8 +209,6 @@ bidirectional_hash_map_2_iterator_t;
 * secondary_key_hasher --- the function for producing secondary key hashes. *
 * primary_key_equality --- the function for querying primary key equality.  *
 * secondary_key_equality - the function for querying secondary key equality.*
-* primary_key_compare ---- the function for comparing primary keys.         *
-* secondary_key_compare -- the function for comparing secondary keys.       *
 * error_sentinel --------- the sentinel return on failed addition.          *
 *-----------------------------------------------------------+               *
 * RETURNS: 1 if initialization was successfull, 0 otherwise.|               *
@@ -234,8 +221,6 @@ int bidirectional_hash_map_2_t_init(
                                   size_t (*secondary_key_hasher)(void*),
                                   int (*primary_key_equality)   (void*, void*),
                                   int (*secondary_key_equality) (void*, void*),
-                                  int (*primary_key_compare)    (void*, void*),
-                                  int (*secondary_key_compare)  (void*, void*),
                                   void* error_sentinel);
 
 /************************************************
