@@ -67,6 +67,28 @@ get_secondary_minimum_tree_node_of(secondary_collision_tree_node_t* node)
     return node;
 }
 
+static primary_collision_tree_node_t* 
+get_minimum_tree_node_of_primary(primary_collision_tree_node_t* node) 
+{
+    while (node->left) 
+    {
+         node = node->left;
+    }    
+
+    return node;
+}
+
+static secondary_collision_tree_node_t* 
+get_minimum_tree_node_of_secondary(secondary_collision_tree_node_t* node) 
+{
+    while (node->left) 
+    {
+         node = node->left;
+    }    
+
+    return node;
+}
+
 static primary_collision_tree_node_t* get_primary_collision_tree_node_successor(
                     primary_collision_tree_node_t* primary_collision_tree_node)
 {
@@ -74,7 +96,7 @@ static primary_collision_tree_node_t* get_primary_collision_tree_node_successor(
     
     if (primary_collision_tree_node->right)
     {
-        return get_minimum_tree_node_of(primary_collision_tree_node->right);
+        return get_minimum_tree_node_of_primary(primary_collision_tree_node->right);
     }
     
     parent_of_primary_collision_tree_node = primary_collision_tree_node->parent;
@@ -109,9 +131,10 @@ primary_collision_tree_left_rotate(primary_collision_tree_node_t* node_1)
         node_1->right->parent = node_1;
     }
     
-    node_1->height = int_max(get_primary_tree_node_height(node_1->left),
+    node_1->height = max_int(get_primary_tree_node_height(node_1->left),
                              get_primary_tree_node_height(node_1->right)) + 1;
-    node_2->height = int_max(get_primary_tree_node_height(node_2->left),
+
+    node_2->height = max_int(get_primary_tree_node_height(node_2->left),
                              get_primary_tree_node_height(node_2->right)) + 1;
     return node_2;
 }
@@ -134,10 +157,10 @@ primary_collision_tree_right_rotate(primary_collision_tree_node_t* node_1)
         node_1->left->parent = node_1;
     }
     
-    node_1->height = int_max(get_primary_tree_node_height(node_1->left),
+    node_1->height = max_int(get_primary_tree_node_height(node_1->left),
                              get_primary_tree_node_height(node_1->right)) + 1;
                              
-    node_2->height = int_max(get_primary_tree_node_height(node_2->left),
+    node_2->height = max_int(get_primary_tree_node_height(node_2->left),
                              get_primary_tree_node_height(node_2->right)) + 1;
     
     return node_2;
@@ -188,11 +211,11 @@ static void fix_primary_collision_tree_after_insertion(
             if (get_primary_tree_node_height(parent->left->left) >=
                 get_primary_tree_node_height(parent->left->right))
             {
-                sub_tree = primary_right_rotate(parent);
+                sub_tree = primary_collision_tree_right_rotate(parent);
             }
             else
             {
-                sub_tree = primary_left_right_rotate(parent);
+                sub_tree = primary_collision_tree_left_right_rotate(parent);
             }
             
             if (!grand_parent)
@@ -213,7 +236,7 @@ static void fix_primary_collision_tree_after_insertion(
             if (grand_parent)
             {
                 grand_parent->height =
-                int_max(get_primary_tree_node_height(grand_parent->left),
+                max_int(get_primary_tree_node_height(grand_parent->left),
                         get_primary_tree_node_height(grand_parent->right)) + 1;
             }
             
@@ -227,14 +250,13 @@ static void fix_primary_collision_tree_after_insertion(
             if (get_primary_tree_node_height(parent->right->right) >=
                 get_primary_tree_node_height(parent->right->left))
             {
-                sub_tree = primary_left_rotate(parent);
+                sub_tree = primary_collision_tree_left_rotate(parent);
             }
             else
             {
-                sub_tree = primary_right_left_rotate(parent);
+                sub_tree = primary_collision_tree_right_left_rotate(parent);
             }
             
-            // OPTIMIZE?
             if (!grand_parent)
             {
                 node_bucket_index = node->key_pair->primary_key_hash
@@ -253,7 +275,7 @@ static void fix_primary_collision_tree_after_insertion(
             if (grand_parent)
             {
                 grand_parent->height =
-                int_max(get_primary_tree_node_height(grand_parent->left),
+                max_int(get_primary_tree_node_height(grand_parent->left),
                         get_primary_tree_node_height(grand_parent->right)) + 1;
             }
             
@@ -261,7 +283,7 @@ static void fix_primary_collision_tree_after_insertion(
         }
         
         parent->height =
-        int_max(get_primary_tree_node_height(parent->left),
+        max_int(get_primary_tree_node_height(parent->left),
                 get_primary_tree_node_height(parent->right)) + 1;
         
         parent = parent->parent;
@@ -291,18 +313,18 @@ static void fix_primary_collision_tree_after_deletion(
             if (get_primary_tree_node_height(parent->left->left) >=
                 get_primary_tree_node_height(parent->left->right))
             {
-                sub_tree = primary_right_rotate(parent);
+                sub_tree = primary_collision_tree_right_rotate(parent);
             }
             else
             {
-                sub_tree = primary_left_right_rotate(parent);
+                sub_tree = primary_collision_tree_left_right_rotate(parent);
             }
             
-            // OPTIMIZE?
             if (!grand_parent)
             {
                 node_bucket_index = node->key_pair->primary_key_hash
                                   & map->modulo_mask;
+
                 map->primary_key_table[node_bucket_index] = sub_tree;
             }
             else if (grand_parent->left == parent)
@@ -317,7 +339,7 @@ static void fix_primary_collision_tree_after_deletion(
             if (grand_parent)
             {
                 grand_parent->height =
-                int_max(get_primary_tree_node_height(grand_parent->left),
+                max_int(get_primary_tree_node_height(grand_parent->left),
                         get_primary_tree_node_height(grand_parent->right)) + 1;
             }
         }
@@ -329,11 +351,11 @@ static void fix_primary_collision_tree_after_deletion(
             if (get_primary_tree_node_height(parent->right->right) >=
                 get_primary_tree_node_height(parent->right->left))
             {
-                sub_tree = primary_left_rotate(parent);
+                sub_tree = primary_collision_tree_left_rotate(parent);
             }
             else
             {
-                sub_tree = primary_right_left_rotate(parent);
+                sub_tree = primary_collision_tree_right_left_rotate(parent);
             }
             
             if (!grand_parent)
@@ -354,13 +376,13 @@ static void fix_primary_collision_tree_after_deletion(
             if (grand_parent)
             {
                 grand_parent->height =
-                int_max(get_primary_tree_node_height(grand_parent->left),
+                max_int(get_primary_tree_node_height(grand_parent->left),
                         get_primary_tree_node_height(grand_parent->right)) + 1;
             }
         }
         
         parent->height =
-        int_max(get_primary_tree_node_height(parent->left),
+        max_int(get_primary_tree_node_height(parent->left),
                 get_primary_tree_node_height(parent->right)) + 1;
         
         parent = parent->parent;
@@ -385,9 +407,10 @@ secondary_collision_tree_left_rotate(secondary_collision_tree_node_t* node_1)
         node_1->right->parent = node_1;
     }
     
-    node_1->height = int_max(get_secondary_tree_node_height(node_1->left),
+    node_1->height = max_int(get_secondary_tree_node_height(node_1->left),
                              get_secondary_tree_node_height(node_1->right)) + 1;
-    node_2->height = int_max(get_secondary_tree_node_height(node_2->left),
+	
+    node_2->height = max_int(get_secondary_tree_node_height(node_2->left),
                              get_secondary_tree_node_height(node_2->right)) + 1;
     return node_2;
 }
@@ -410,9 +433,10 @@ secondary_collision_tree_right_rotate(secondary_collision_tree_node_t* node_1)
         node_1->left->parent = node_1;
     }
     
-    node_1->height = int_max(get_secondary_tree_node_height(node_1->left),
+    node_1->height = max_int(get_secondary_tree_node_height(node_1->left),
                              get_secondary_tree_node_height(node_1->right)) + 1;
-    node_2->height = int_max(get_secondary_tree_node_height(node_2->left),
+
+    node_2->height = max_int(get_secondary_tree_node_height(node_2->left),
                              get_secondary_tree_node_height(node_2->right)) + 1;
     
     return node_2;
@@ -433,7 +457,7 @@ secondary_collision_tree_right_left_rotate(
 /**************************************************************************
 * Performs a double left/right rotation of a primary collision tree node. *
 **************************************************************************/
-static primary_collision_tree_node_t*
+static secondary_collision_tree_node_t*
 secondary_collision_tree_left_right_rotate(
                                         secondary_collision_tree_node_t* node_1)
 {
@@ -465,11 +489,11 @@ static void fix_secondary_collision_tree_after_insertion(
             if (get_secondary_tree_node_height(parent->left->left) >=
                 get_secondary_tree_node_height(parent->left->right))
             {
-                sub_tree = secondary_right_rotate(parent);
+                sub_tree = secondary_collision_tree_right_rotate(parent);
             }
             else
             {
-                sub_tree = secondary_left_right_rotate(parent);
+                sub_tree = secondary_collision_tree_left_right_rotate(parent);
             }
             
             if (!grand_parent)
@@ -490,7 +514,7 @@ static void fix_secondary_collision_tree_after_insertion(
             if (grand_parent)
             {
                 grand_parent->height =
-                int_max(get_secondary_tree_node_height(grand_parent->left),
+                max_int(get_secondary_tree_node_height(grand_parent->left),
                         get_secondary_tree_node_height(grand_parent->right))
                     + 1;
             }
@@ -505,14 +529,13 @@ static void fix_secondary_collision_tree_after_insertion(
             if (get_secondary_tree_node_height(parent->right->right) >=
                 get_secondary_tree_node_height(parent->right->left))
             {
-                sub_tree = secondary_left_rotate(parent);
+                sub_tree = secondary_collision_tree_left_rotate(parent);
             }
             else
             {
-                sub_tree = secondary_right_left_rotate(parent);
+                sub_tree = secondary_collision_tree_right_left_rotate(parent);
             }
             
-            // OPTIMIZE?
             if (!grand_parent)
             {
                 node_bucket_index = node->key_pair->secondary_key_hash
@@ -531,7 +554,7 @@ static void fix_secondary_collision_tree_after_insertion(
             if (grand_parent)
             {
                 grand_parent->height =
-                int_max(get_secondary_tree_node_height(grand_parent->left),
+                max_int(get_secondary_tree_node_height(grand_parent->left),
                         get_secondary_tree_node_height(grand_parent->right))
                     + 1;
             }
@@ -540,7 +563,7 @@ static void fix_secondary_collision_tree_after_insertion(
         }
         
         parent->height =
-        int_max(get_secondary_tree_node_height(parent->left),
+        max_int(get_secondary_tree_node_height(parent->left),
                 get_secondary_tree_node_height(parent->right)) + 1;
         
         parent = parent->parent;
@@ -570,14 +593,13 @@ static void fix_secondary_collision_tree_after_deletion(
             if (get_secondary_tree_node_height(parent->left->left) >=
                 get_secondary_tree_node_height(parent->left->right))
             {
-                sub_tree = secondary_right_rotate(parent);
+                sub_tree = secondary_collision_tree_right_rotate(parent);
             }
             else
             {
-                sub_tree = secondary_left_right_rotate(parent);
+                sub_tree = secondary_collision_tree_left_right_rotate(parent);
             }
             
-            // OPTIMIZE?
             if (!grand_parent)
             {
                 node_bucket_index = node->key_pair->secondary_key_hash
@@ -596,7 +618,7 @@ static void fix_secondary_collision_tree_after_deletion(
             if (grand_parent)
             {
                 grand_parent->height =
-                int_max(get_secondary_tree_node_height(grand_parent->left),
+                max_int(get_secondary_tree_node_height(grand_parent->left),
                         get_secondary_tree_node_height(grand_parent->right))
                     + 1;
             }
@@ -609,11 +631,11 @@ static void fix_secondary_collision_tree_after_deletion(
             if (get_secondary_tree_node_height(parent->right->right) >=
                 get_secondary_tree_node_height(parent->right->left))
             {
-                sub_tree = secondary_left_rotate(parent);
+                sub_tree = secondary_collision_tree_left_rotate(parent);
             }
             else
             {
-                sub_tree = secondary_right_left_rotate(parent);
+                sub_tree = secondary_collision_tree_right_left_rotate(parent);
             }
             
             if (!grand_parent)
@@ -634,14 +656,14 @@ static void fix_secondary_collision_tree_after_deletion(
             if (grand_parent)
             {
                 grand_parent->height =
-                int_max(get_secondary_tree_node_height(grand_parent->left),
+                max_int(get_secondary_tree_node_height(grand_parent->left),
                         get_secondary_tree_node_height(grand_parent->right))
                     + 1;
             }
         }
         
         parent->height =
-        int_max(get_secondary_tree_node_height(parent->left),
+        max_int(get_secondary_tree_node_height(parent->left),
                 get_secondary_tree_node_height(parent->right)) + 1;
         
         parent = parent->parent;
@@ -656,11 +678,8 @@ static void unlink_primary_collision_tree_node_with_both_children(
                     primary_collision_tree_node_t* node)
 {
     primary_collision_tree_node_t* successor =
-    get_minimum_tree_node_of(node->right);
-    
-    size_t node_bucket_index = node->key_pair->primary_key_hash
-                             & map->modulo_mask;
-    
+    get_minimum_tree_node_of_primary(node->right);
+    	
     primary_collision_tree_node_t* child_of_successor;
     primary_collision_tree_node_t* parent_of_successor;
     
@@ -806,21 +825,18 @@ static void unlink_secondary_collision_tree_node_with_both_children(
                                         bidirectional_hash_map_2_t* map,
                                         secondary_collision_tree_node_t* node)
 {
-    primary_collision_tree_node_t* successor =
-    get_minimum_tree_node_of(node->right);
+    secondary_collision_tree_node_t* successor =
+    get_minimum_tree_node_of_secondary(node->right);
     
-    size_t node_bucket_index = node->key_pair->primary_key_hash
-    & map->modulo_mask;
-    
-    primary_collision_tree_node_t* child_of_successor;
-    primary_collision_tree_node_t* parent_of_successor;
+    secondary_collision_tree_node_t* child_of_successor;
+    secondary_collision_tree_node_t* parent_of_successor;
     
     node->key_pair = successor->key_pair;
     
     child_of_successor  = successor->right;
     parent_of_successor = successor->parent;
     
-    /* THIS IS STRANGE: */
+    /* CHECK ME! */
     if (parent_of_successor->left == successor)
     {
         parent_of_successor->left = child_of_successor;
@@ -835,7 +851,7 @@ static void unlink_secondary_collision_tree_node_with_both_children(
         child_of_successor->parent = parent_of_successor;
     }
     
-    fix_primary_collision_tree_after_deletion(map, successor);
+    fix_secondary_collision_tree_after_deletion(map, successor);
 }
 
 /*************************************************************************
@@ -845,8 +861,8 @@ static void unlink_secondary_collision_tree_node_with_one_child(
                                         bidirectional_hash_map_2_t* map,
                                         secondary_collision_tree_node_t* node)
 {
-    primary_collision_tree_node_t* child;
-    primary_collision_tree_node_t* parent;
+    secondary_collision_tree_node_t* child;
+    secondary_collision_tree_node_t* parent;
     
     size_t node_bucket_index = node->key_pair->primary_key_hash
     & map->modulo_mask;
@@ -865,7 +881,7 @@ static void unlink_secondary_collision_tree_node_with_one_child(
     
     if (!parent)
     {
-        map->primary_key_table[node_bucket_index] = child;
+        map->secondary_key_table[node_bucket_index] = child;
         return;
     }
     
@@ -878,7 +894,7 @@ static void unlink_secondary_collision_tree_node_with_one_child(
         parent->right = child;
     }
     
-    fix_primary_collision_tree_after_deletion(map, node);
+    fix_secondary_collision_tree_after_deletion(map, node);
 }
 
 /**********************************************************************
@@ -888,7 +904,7 @@ static void unlink_secondary_collision_tree_node_with_no_children(
                                         bidirectional_hash_map_2_t* map,
                                         secondary_collision_tree_node_t* node)
 {
-    primary_collision_tree_node_t* parent = node->parent;
+    secondary_collision_tree_node_t* parent = node->parent;
     
     size_t node_bucket_index = node->key_pair->primary_key_hash
     & map->modulo_mask;
@@ -908,7 +924,7 @@ static void unlink_secondary_collision_tree_node_with_no_children(
         parent->right = NULL;
     }
     
-    fix_primary_collision_tree_after_deletion(map, node->parent);
+    fix_secondary_collision_tree_after_deletion(map, node->parent);
 }
 
 /***************************************************************************
@@ -1308,49 +1324,95 @@ size_t bidirectional_hash_map_2_t_capacity(bidirectional_hash_map_2_t* map)
     return map->capacity;
 }
 
-/*****************************************************************************
- * This function relinks all the mappings (key pairs and collision chains) to *
- * new hash tables.                                                           *
- *****************************************************************************/
+static primary_collision_tree_node_t* 
+get_primary_collision_tree_node(
+    bidirectional_hash_map_2_t* map,
+    void* datum,
+    primary_collision_tree_node_t* bucket_root)
+{
+    primary_collision_tree_node_t* node = bucket_root;
+
+    while (node) 
+    {
+	int cmp = map->primary_key_compare(
+                       datum, 
+                       node->key_pair->primary_key);
+
+        if (cmp == 0) 
+        {
+            return node;
+        }
+
+        if (cmp < 0) 
+        {
+            node = node->left;
+        }
+        else 
+        {
+            node = node->right;
+        }
+    }
+
+    abort();
+    return NULL; 
+}
+
+static secondary_collision_tree_node_t* 
+find_secondary_collision_tree_node_via_primary_collision_tree_node(
+    bidirectional_hash_map_2_t* map,
+    primary_collision_tree_node_t* primary_collision_tree_node
+)  
+{
+	size_t primary_key_hash =
+            primary_collision_tree_node->key_pair->primary_key_hash;
+
+	size_t primary_key_bucket_index = primary_key_hash & map->capacity;
+
+	key_pair_t* key_pair = get_
+            map->primary_key_table[primary_key_bucket_index];
+
+	size_t secondary_key_bucket_index = key_pair->secondary_key_hash;
+
+
+
+	return NULL;      
+}
+
+/****************************************************************************
+ * This function relinks the 'primary_collision_chain_node' node to the new * 
+ * primary and secondary hash tables.                                       * 
+ ****************************************************************************/
 static void relink_to_new_tables(
                     bidirectional_hash_map_2_t* map,
-                    primary_collision_tree_node_t* primary_collision_chain_node,
+                    primary_collision_tree_node_t* primary_collision_tree_node,
                     primary_collision_tree_node_t** next_primary_hash_table,
                     secondary_collision_tree_node_t** next_secondary_hash_table)
 {
-    size_t primary_collision_chain_bucket_index;
-    size_t secondary_collision_chain_bucket_index;
-    size_t next_capacity;
-    size_t next_modulo_mask;
+    size_t primary_collision_tree_bucket_index;
+    size_t next_capacity = 2 * map->capacity;
+    size_t next_modulo_mask = next_capacity - 1;
     
-    secondary_collision_tree_node_t* secondary_collision_chain_node =
-    find_secondary_collision_chain_node_via_primary_collision_chain_node(
+    secondary_collision_tree_node_t* secondary_collision_tree_node =
+        find_secondary_collision_chain_node_via_primary_collision_tree_node(
                                                 map,
-                                                primary_collision_chain_node);
+                                                primary_collision_tree_node);
     
     /******************************************************************
     * Unlink the 'primary_collision_tree_node' from its current tree. *
     ******************************************************************/
-    unlink_primary_collision_tree_node(map, primary_collision_chain_node);
+    unlink_primary_collision_tree_node(map, primary_collision_tree_node);
     
     /*********************************************************
     * Unlink the opposite collision tree node of             *
     * 'primary_collision_tree_node' from the collision tree. *
     *********************************************************/
-    unlink_secondary_collision_tree_node(map, secondary_collision_chain_node);
-    
-    /******************************************************
-    * Relink both 'primary_collision_tree_node' and       *
-    * 'secondary_collision_tree_node' to new hash tables. *
-    ******************************************************/
-    next_capacity = map->capacity << 1;
-    next_modulo_mask = next_capacity - 1;
+    unlink_secondary_collision_tree_node(map, secondary_collision_tree_node);
     
     /************************************************************
     * Link 'primary_collision_tree_node' to its new hash table. *
     ************************************************************/
-    primary_collision_chain_bucket_index =
-    primary_collision_chain_node->key_pair->primary_key_hash & next_modulo_mask;
+    primary_collision_tree_bucket_index =
+    primary_collision_tree_node->key_pair->primary_key_hash & next_modulo_mask;
     
     /* TODO! */
     
