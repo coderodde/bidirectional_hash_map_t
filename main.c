@@ -1,4 +1,5 @@
 #include "bidirectional_hash_map.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -31,7 +32,7 @@ size_t secondary_key_hasher(void* key)
 
 int primary_key_equality(void* a, void* b)
 {
-    return ((int) a) == ((int) b);
+    return (uintptr_t) a == (uintptr_t) b;
 }
 
 int secondary_key_equality(void* a, void* b)
@@ -61,36 +62,36 @@ int main()
     for (i = 0; i < 32; ++i)
     {
         ASSERT(bidirectional_hash_map_t_size(&map) == i);
-        bidirectional_hash_map_t_put_by_primary(&map, i, 32 + i);
+        bidirectional_hash_map_t_put_by_primary(&map, (void*) i, (void*)(32 + i));
         ASSERT(bidirectional_hash_map_t_size(&map) == i + 1);
     }
     
     for (i = 0; i < 32; ++i)
     {
         ASSERT(bidirectional_hash_map_t_size(&map) == 32 + i);
-        bidirectional_hash_map_t_put_by_secondary(&map, 32 + i, i);
+        bidirectional_hash_map_t_put_by_secondary(&map, (void*)(32 + i), (void*) i);
         ASSERT(bidirectional_hash_map_t_size(&map) == 33 + i);
     }
     
     for (i = 0; i < 32; ++i)
     {
-        ret = bidirectional_hash_map_t_get_by_primary_key(&map, i);
+        ret = bidirectional_hash_map_t_get_by_primary_key(&map, (void*) i);
         ASSERT((int) ret == i + 32);
     }
     
     for (i = 0; i < 32; ++i)
     {
-        ret = bidirectional_hash_map_t_get_by_secondary_key(&map, i);
+        ret = bidirectional_hash_map_t_get_by_secondary_key(&map, (void*) i);
         ASSERT((int) ret == i + 32);
         
     }
     
     for (i = 0; i < 32; ++i)
     {
-        ASSERT(bidirectional_hash_map_t_contains_primary_key(&map, i));
-        ASSERT(bidirectional_hash_map_t_contains_primary_key(&map, i + 32));
-        ASSERT(bidirectional_hash_map_t_contains_secondary_key(&map, i));
-        ASSERT(bidirectional_hash_map_t_contains_secondary_key(&map, i + 32));
+        ASSERT(bidirectional_hash_map_t_contains_primary_key(&map, (void*) i));
+        ASSERT(bidirectional_hash_map_t_contains_primary_key(&map, (void*)(i + 32)));
+        ASSERT(bidirectional_hash_map_t_contains_secondary_key(&map, (void*) i));
+        ASSERT(bidirectional_hash_map_t_contains_secondary_key(&map, (void*)(i + 32)));
     }
     
     bidirectional_hash_map_t_destroy(&map);
@@ -106,12 +107,12 @@ int main()
     
     for (i = 0; i < 10; ++i)
     {
-        ASSERT(bidirectional_hash_map_t_put_by_primary(&map, i, i + 1000)
+        ASSERT(bidirectional_hash_map_t_put_by_primary(&map, (void*) i, (void*)(i + 1000))
                == NULL);
     }
     
-    ASSERT(bidirectional_hash_map_t_remove_by_primary_key(&map, 1) == 1001);
-    ASSERT(bidirectional_hash_map_t_remove_by_secondary_key(&map, 1002) == 2);
+    ASSERT(bidirectional_hash_map_t_remove_by_primary_key(&map, (void*) 1) == (void*) 1001);
+    ASSERT(bidirectional_hash_map_t_remove_by_secondary_key(&map, (void*) 1002) == (void*) 2);
     
     bidirectional_hash_map_iterator_t_init(&map, &iterator);
     

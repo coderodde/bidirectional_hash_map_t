@@ -769,14 +769,7 @@ void* bidirectional_hash_map_t_put_by_primary(bidirectional_hash_map_t* map,
                                               void* primary_key,
                                               void* secondary_key)
 {
-    size_t primary_key_hash;
-    size_t primary_key_collision_chain_bucket_index;
     primary_collision_chain_node_t* primary_collision_chain_node;
-    void* return_value;
-    
-    primary_key_hash = map->primary_key_hasher(primary_key);
-    primary_key_collision_chain_bucket_index =
-    primary_key_hash & map->modulo_mask;
     
     primary_collision_chain_node =
         find_primary_collision_chain_node(map, primary_key);
@@ -798,14 +791,7 @@ void* bidirectional_hash_map_t_put_by_secondary(bidirectional_hash_map_t* map,
                                                 void* primary_key,
                                                 void* secondary_key)
 {
-    size_t secondary_key_hash;
-    size_t secondary_key_collision_chain_bucket_index;
     secondary_collision_chain_node_t* secondary_collision_chain_node;
-    void* return_value;
-    
-    secondary_key_hash = map->secondary_key_hasher(secondary_key);
-    secondary_key_collision_chain_bucket_index =
-    secondary_key_hash & map->modulo_mask;
     
     secondary_collision_chain_node =
         find_secondary_collision_chain_node(map, secondary_key);
